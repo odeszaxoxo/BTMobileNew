@@ -767,19 +767,14 @@ export default class Store extends React.Component {
         <View
           style={{
             position: 'absolute',
-            botton: -150,
-            right: 150,
+            bottom: 50,
+            right: 30,
           }}>
-          <Button
-            style={{
-              height: 40,
-              width: 40,
-              backgroundColor: 'black',
-              borderRadius: '50%',
-            }}
-            onPress={this.goToCreateScreen}>
-            +
-          </Button>
+          {/* <Button
+            title="+"
+            onPress={this.goToCreateScreen}
+            buttonStyle={{width: 40, height: 40, backgroundColor: 'lightblue', borderRadius: 40, fontSize: 24}}
+          /> */}
         </View>
       </View>
     );

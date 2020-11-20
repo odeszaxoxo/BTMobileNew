@@ -406,47 +406,132 @@ export default class SignInScreen extends React.Component {
     } else {
       port = 'https://calendartest.bolshoi.ru:8050';
     }
-    if (this.state.email.includes('\\')) {
-      var ind = this.state.email.indexOf('\\');
-      var tag = this.state.email.substr(0, ind);
-      var userUntag = this.state.email.substr(ind + 2);
-    }
-    var testBody = JSON.stringify({
-      username: tag + '\\' + userUntag,
-      password: this.state.password,
-      isLogin: '1',
-    });
-    (async () => {
-      const rawResponse = await fetch(port + '/WCF/BTService.svc/TestLogin', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: testBody,
-      }).catch(function(e) {
-        console.log(e);
-        Alert.alert('Ошибка', 'Сервер недоступен');
-        return null;
-      });
-      if (rawResponse !== null) {
-        const content2 = await rawResponse.json();
-        if (content2.TestLoginResult) {
-          await AsyncStorage.setItem('userToken', JSON.stringify(testBody));
-          await AsyncStorage.setItem('user', this.state.email);
-          await AsyncStorage.setItem('bigCheck', JSON.stringify(true));
-          await AsyncStorage.setItem('smallCheck', JSON.stringify(true));
-          await AsyncStorage.setItem('bigTime', 'key0');
-          await AsyncStorage.setItem('smallTime', 'key0');
-          if (_.isEmpty(realm.objects('EventItem'))) {
-            await this.navigate(testBody);
+    var mask = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (this.state.prodCheck) {
+      if (mask.test(this.state.email.toLowerCase()) === true) {
+        var testBody = JSON.stringify({
+          username: this.state.email,
+          password: this.state.password,
+          isLogin: '0',
+        });
+        (async () => {
+          const rawResponse = await fetch(
+            port + '/WCF/BTService.svc/TestLogin',
+            {
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+              },
+              body: testBody,
+            },
+          ).catch(function(e) {
+            console.log(e);
+            Alert.alert('Ошибка', 'Сервер недоступен');
+            return null;
+          });
+          if (rawResponse !== null) {
+            const content2 = await rawResponse.json();
+            if (content2.TestLoginResult) {
+              await AsyncStorage.setItem('userToken', JSON.stringify(testBody));
+              await AsyncStorage.setItem('user', this.state.email);
+              await AsyncStorage.setItem('bigCheck', JSON.stringify(true));
+              await AsyncStorage.setItem('smallCheck', JSON.stringify(true));
+              await AsyncStorage.setItem('bigTime', 'key0');
+              await AsyncStorage.setItem('smallTime', 'key0');
+              if (_.isEmpty(realm.objects('EventItem'))) {
+                await this.navigate(testBody);
+              }
+              this.props.navigation.navigate('App');
+            } else {
+              this.setState({correct: 'flex'});
+            }
           }
-          this.props.navigation.navigate('App');
-        } else {
-          this.setState({correct: 'flex'});
-        }
+        })();
+      } else {
+        var testBody = JSON.stringify({
+          username: 'BT\\' + this.state.email,
+          password: this.state.password,
+          isLogin: '1',
+        });
+        (async () => {
+          const rawResponse = await fetch(
+            port + '/WCF/BTService.svc/TestLogin',
+            {
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+              },
+              body: testBody,
+            },
+          ).catch(function(e) {
+            console.log(e);
+            Alert.alert('Ошибка', 'Сервер недоступен');
+            return null;
+          });
+          if (rawResponse !== null) {
+            const content2 = await rawResponse.json();
+            if (content2.TestLoginResult) {
+              await AsyncStorage.setItem('userToken', JSON.stringify(testBody));
+              await AsyncStorage.setItem('user', this.state.email);
+              await AsyncStorage.setItem('bigCheck', JSON.stringify(true));
+              await AsyncStorage.setItem('smallCheck', JSON.stringify(true));
+              await AsyncStorage.setItem('bigTime', 'key0');
+              await AsyncStorage.setItem('smallTime', 'key0');
+              if (_.isEmpty(realm.objects('EventItem'))) {
+                await this.navigate(testBody);
+              }
+              this.props.navigation.navigate('App');
+            } else {
+              this.setState({correct: 'flex'});
+            }
+          }
+        })();
       }
-    })();
+    } else {
+      if (this.state.email.includes('\\')) {
+        var ind = this.state.email.indexOf('\\');
+        var tag = this.state.email.substr(0, ind);
+        var userUntag = this.state.email.substr(ind + 2);
+      }
+      var testBody = JSON.stringify({
+        username: tag + '\\' + userUntag,
+        password: this.state.password,
+        isLogin: '1',
+      });
+      (async () => {
+        const rawResponse = await fetch(port + '/WCF/BTService.svc/TestLogin', {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+          body: testBody,
+        }).catch(function(e) {
+          console.log(e);
+          Alert.alert('Ошибка', 'Сервер недоступен');
+          return null;
+        });
+        if (rawResponse !== null) {
+          const content2 = await rawResponse.json();
+          if (content2.TestLoginResult) {
+            await AsyncStorage.setItem('userToken', JSON.stringify(testBody));
+            await AsyncStorage.setItem('user', this.state.email);
+            await AsyncStorage.setItem('bigCheck', JSON.stringify(true));
+            await AsyncStorage.setItem('smallCheck', JSON.stringify(true));
+            await AsyncStorage.setItem('bigTime', 'key0');
+            await AsyncStorage.setItem('smallTime', 'key0');
+            if (_.isEmpty(realm.objects('EventItem'))) {
+              await this.navigate(testBody);
+            }
+            this.props.navigation.navigate('App');
+          } else {
+            this.setState({correct: 'flex'});
+          }
+        }
+      })();
+    }
   };
 }
 
