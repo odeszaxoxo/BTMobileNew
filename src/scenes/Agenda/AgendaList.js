@@ -131,7 +131,18 @@ export default class Store extends React.Component {
       this.setState({selectedCheck: testArr});
       const prodCheck = JSON.parse(await AsyncStorage.getItem('development'));
       this.setState({prodCheck: prodCheck});
-      return [token, testArr, small, big, smallTime, bigTime, prodCheck];
+      const availableScenes = JSON.parse(await AsyncStorage.getItem('scenes'));
+      this.setState({avaavailableScenes: availableScenes});
+      return [
+        token,
+        testArr,
+        small,
+        big,
+        smallTime,
+        bigTime,
+        prodCheck,
+        availableScenes,
+      ];
     } catch (error) {
       console.log(error.message);
     }
@@ -172,7 +183,6 @@ export default class Store extends React.Component {
   };
 
   toSettings = () => {
-    console.log('toset');
     clearInterval(this.interval);
     this.props.navigation.navigate('Settings');
   };
@@ -237,6 +247,7 @@ export default class Store extends React.Component {
             moment(lastMomentTime).format('YYYY-MM-DDTHH:mm:ss') +
             '/' +
             moment(newMomentTime).format('YYYY-MM-DDTHH:mm:ss');
+          console.log(urlTest);
           let rawResponse1 = await fetch(urlTest, {
             method: 'POST',
             headers: {
@@ -249,9 +260,11 @@ export default class Store extends React.Component {
             return null;
           });
           const stat1 = rawResponse1.status;
-          console.log(stat1);
           if (stat1 === 200) {
             const content1 = await rawResponse1.json();
+            for (var s = 0; s < content1.GetModifiedEventsByPeriodResult.length; s++) {
+              //console.log('MOD' + s, content1.GetModifiedEventsByPeriodResult[s].title);
+            }
             if (_.isEmpty(content1.GetModifiedEventsByPeriodResult)) {
             } else {
               for (
@@ -289,6 +302,10 @@ export default class Store extends React.Component {
                 let sceneId =
                   content1.GetModifiedEventsByPeriodResult[p].ResourceId;
                 let serverId = content1.GetModifiedEventsByPeriodResult[p].Id;
+                var description =
+                  content1.GetModifiedEventsByPeriodResult[p].Description;
+                var recurrence =
+                  content1.GetModifiedEventsByPeriodResult[p].isRecurrence;
                 let findVar =
                   sceneId.charAt(0).toUpperCase() + sceneId.slice(1);
                 if (
@@ -326,10 +343,13 @@ export default class Store extends React.Component {
                           sceneId: sceneId,
                           serverId: serverId,
                           id: realm.objects('EventItem').length + 1,
+                          description: description,
+                          recurrence: recurrence,
                         },
                         'modified',
                       );
                       this.setState({realm});
+                      console.log(serverId);
                     });
                   } else {
                     let refreshed = realm
@@ -352,10 +372,13 @@ export default class Store extends React.Component {
                           sceneId: sceneId,
                           serverId: serverId,
                           id: refreshed,
+                          description: description,
+                          recurrence: recurrence,
                         },
                         'modified',
                       );
                       this.setState({realm});
+                      console.log(refreshed);
                     });
                   }
                 }
@@ -377,6 +400,7 @@ export default class Store extends React.Component {
         }
       }
     });
+    console.log(realm.objects('EventItem').length);
     await AsyncStorage.removeItem('ModifiedRefresh');
     await AsyncStorage.setItem('ModifiedRefresh', JSON.stringify(refreshDate));
   };
@@ -384,7 +408,6 @@ export default class Store extends React.Component {
   getDeletedEvents = async () => {
     var testBody = this.state.usertoken;
     const prodCheck = JSON.parse(await AsyncStorage.getItem('development'));
-    console.log(prodCheck);
     if (prodCheck) {
       var port = 'https://calendar.bolshoi.ru:8050';
     } else {
@@ -412,7 +435,6 @@ export default class Store extends React.Component {
       moment(lastMomentTime).format('YYYY-MM-DDTHH:mm:ss') +
       '/' +
       moment(newMomentTime).format('YYYY-MM-DDTHH:mm:ss');
-    console.log(urlTest);
     let rawResponse1 = await fetch(urlTest, {
       method: 'POST',
       headers: {
@@ -425,7 +447,6 @@ export default class Store extends React.Component {
       return null;
     });
     const stat = rawResponse1.status;
-    console.log(stat);
     if (stat === 200) {
       const content1 = await rawResponse1.json();
       if (_.isEmpty(content1.GetDeletedEventsByPeriodResult)) {
@@ -507,6 +528,7 @@ export default class Store extends React.Component {
     }
     items = _.sortBy(items, ['date', 'time']);
     this.setState({items: items});
+    console.log(items.length);
     var index = _.findIndex(items, function(item) {
       return item.date === moment(starter).format('YYYY-MM-DD');
     });
@@ -623,12 +645,10 @@ export default class Store extends React.Component {
 
   onRegister(token) {
     Alert.alert('Registered !', JSON.stringify(token));
-    console.log(token);
     this.setState({registerToken: token.token, gcmRegistered: true});
   }
 
   onNotif(notif) {
-    console.log(notif);
     Alert.alert(notif.title, notif.message);
   }
 
@@ -697,32 +717,27 @@ export default class Store extends React.Component {
         }}>
         <Overlay
           isVisible={this.state.showModal}
+          fullScreen={true}
+          overlayBackgroundColor="transparent"
           overlayStyle={{
-            width: '90%',
-            height: '20%',
+            backgroundColor: 'transparent',
             alignSelf: 'center',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-around',
           }}>
-          <Text style={{alignSelf: 'center', fontSize: 14}}>
-            Подождите, идет форматирование данных.
-          </Text>
           <ActivityIndicator size="small" color="#0000ff" />
         </Overlay>
         <Overlay
           isVisible={this.state.showRefreshModal}
+          fullScreen={true}
+          overlayBackgroundColor="transparent"
           overlayStyle={{
-            width: '90%',
-            height: '20%',
             alignSelf: 'center',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-around',
           }}>
-          <Text style={{alignSelf: 'center', fontSize: 14}}>
-            Подождите, идет загрузка данных.
-          </Text>
           <ActivityIndicator size="small" color="#0000ff" />
         </Overlay>
         {this.state.showPicker && (
@@ -730,8 +745,8 @@ export default class Store extends React.Component {
             <CalendarPicker
               startFromMonday={true}
               todayBackgroundColor="#f2e6ff"
-              previousTitle="Предыдущий"
-              nextTitle="Следующий"
+              previousTitle="Пред"
+              nextTitle="След"
               selectedDayColor="#1976D2"
               selectedDayTextColor="#FFFFFF"
               onDateChange={this.onDateChange}
@@ -755,7 +770,13 @@ export default class Store extends React.Component {
         )}
         <FlatList
           data={this.state.items}
-          renderItem={({item}) => <AgendaItem item={item} />}
+          renderItem={({item}) => (
+            <AgendaItem
+              item={item}
+              token={this.state.usertoken}
+              navigation={this.props.navigation}
+            />
+          )}
           ItemSeparatorComponent={this.renderSeparator}
           removeClippedSubviews={false}
           ListEmptyComponent={this._listEmptyComponent}
@@ -770,11 +791,17 @@ export default class Store extends React.Component {
             bottom: 50,
             right: 30,
           }}>
-          {/* <Button
+          <Button
             title="+"
             onPress={this.goToCreateScreen}
-            buttonStyle={{width: 40, height: 40, backgroundColor: 'lightblue', borderRadius: 40, fontSize: 24}}
-          /> */}
+            buttonStyle={{
+              width: 40,
+              height: 40,
+              backgroundColor: 'lightblue',
+              borderRadius: 40,
+              fontSize: 24,
+            }}
+          />
         </View>
       </View>
     );

@@ -15,6 +15,7 @@ import NotificationServiceLong from './src/services/NotificationServiceLong';
 import appConfig from './app.json';
 import Datepicker from './src/scenes/Datepicker/Datepicker';
 import Create from './src/scenes/Create/Create';
+import Edit from './src/scenes/Edit/Edit';
 
 const AppStack = createStackNavigator({
   Agenda: AgendaList,
@@ -22,6 +23,7 @@ const AppStack = createStackNavigator({
   Settings: Settings,
   Datepicker: Datepicker,
   Create: Create,
+  Edit: Edit,
 });
 
 const AuthStack = createStackNavigator(

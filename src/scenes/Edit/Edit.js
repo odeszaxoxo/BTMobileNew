@@ -20,8 +20,7 @@ import CalendarPicker from 'react-native-calendar-picker';
 import NetInfo from '@react-native-community/netinfo';
 import MultiSelect from 'react-native-multiple-select';
 import DatePicker from 'react-native-date-picker';
-
-export default class CreateScreen extends Component {
+export default class EditScreen extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -29,7 +28,7 @@ export default class CreateScreen extends Component {
       eventDesciption: '',
       selected: undefined,
       scenes: [],
-      selectedCollective: undefined,
+      selectedCollective: '',
       collectivesArray: [],
       collectives: [],
       usersArray: [],
@@ -39,11 +38,12 @@ export default class CreateScreen extends Component {
       selectedAlert: [],
       dateStart: new Date(),
       dateEnd: new Date(),
-      selectedRecurrence: 'key0',
+      selectedRecurrence: '',
+      eventID: undefined,
     };
   }
   static navigationOptions = {
-    title: 'Создание события',
+    title: 'Изменение события',
   };
 
   componentDidMount() {
@@ -65,23 +65,57 @@ export default class CreateScreen extends Component {
     } catch (error) {
       console.log(error.message);
     }
+    const {navigation} = this.props;
+    const item1 = navigation.getParam('item', 'empty');
+    console.log(item1);
+    this.setState({
+      eventTitle: item1.title,
+      eventDesciption: item1.description,
+    });
     var list = [];
     var usersList = [];
     var externalList = [];
+    var selectedEditUsers = [];
+    var selectedCollectivesEdit = [];
+    var selectedReqEditUsers = [];
+    var selectedExtEditUsers = [];
     for (i = 0; i < this.state.usersArray.length; i++) {
       var item = {
         name: this.state.usersArray[i].Name,
         id: this.state.usersArray[i].Id,
       };
+      var usersEdit = item1.alerted.split(';');
+      var usersReqEdit = item1.required.split(';');
+      for (var j = 0; j < usersEdit.length; j++) {
+        if (item.name === usersEdit[j]) {
+          selectedEditUsers.push(item.id);
+        }
+      }
+      for (var j = 0; j < usersEdit.length; j++) {
+        if (item.name === usersReqEdit[j]) {
+          selectedReqEditUsers.push(item.id);
+        }
+      }
       usersList.push(item);
     }
+    this.setState({
+      selectedAlert: selectedEditUsers,
+      selectedUsers: selectedReqEditUsers,
+    });
     for (i = 0; i < this.state.externalArray.length; i++) {
       var item = {
         name: this.state.externalArray[i].Name,
         id: this.state.externalArray[i].Id,
       };
+      var usersExtEdit = item1.outer.split('; ');
+      for (var j = 0; j < usersExtEdit.length; j++) {
+        if (item.name === usersExtEdit[j]) {
+          selectedExtEditUsers.push(item.id);
+        }
+      }
       externalList.push(item);
     }
+    this.setState({selectedExternal: selectedExtEditUsers});
     for (var i = 0; i < realm.objects('Scene').length; i++) {
       var item = {
         label: realm.objects('Scene')[i].title,
@@ -100,8 +134,29 @@ export default class CreateScreen extends Component {
         title: this.state.collectivesArray[i].Title,
         id: this.state.collectivesArray[i].Id,
       };
+      var collectivesEdit = item1.troups;
+      if (item.title === collectivesEdit) {
+        selectedCollectivesEdit.push(item.id);
+      }
       collectivesList.push(item);
     }
+    var startDate = item1.date;
+    var startTime = item1.time.split(' - ');
+    var startDateTime = startDate + 'T' + startTime[0] + ':00Z';
+    var endDateTime = startDate + 'T' + startTime[1] + ':00Z';
+    var offset = new Date().getTimezoneOffset() / 60;
+    this.setState({
+      dateStart: new Date(startDateTime),
+      dateEnd: new Date(endDateTime),
+    });
+    this.setState({selectedCollective: selectedCollectivesEdit});
+    var selectedRec;
+    if (item1.recurrence) {
+      selectedRec = 'key1';
+    } else {
+      selectedRec = 'key0';
+    }
+    this.setState({selectedReccurence: selectedRec, eventID: item1.serverId});
     // eslint-disable-next-line react/no-did-mount-set-state
     this.setState({scenes: list});
     this.setState({collectives: collectivesList});
@@ -130,7 +185,14 @@ export default class CreateScreen extends Component {
   saveEvent = async () => {
     var recurrenceRule = '';
     var weekDays = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
-    if (this.state.selectedRecurrence === 'key0') {
+    const {navigation} = this.props;
+    const item1 = navigation.getParam('item', 'empty');
+    if (this.state.selectedRecurrence === '') {
+      var rec = item1.recurrence ? 'key1' : 'key0';
+    } else {
+      rec = this.state.selectedRecurrence;
+    }
+    if (rec === 'key0') {
       recurrenceRule = '';
     } else {
       var weekDay = weekDays[this.state.dateStart.getDay() - 1];
@@ -173,6 +235,8 @@ export default class CreateScreen extends Component {
           weekDay;
       }
     }
+    var ds = new Date(this.state.dateStart);
+    var de = new Date(this.state.dateEnd);
     if (new Date(this.state.dateEnd) > new Date(this.state.dateStart)) {
       var savedEvent = {
         username: this.state.userToken.username,
@@ -189,24 +253,25 @@ export default class CreateScreen extends Component {
         dutyUsers: this.state.selectedAlert,
         alertedUsers: this.state.selectedAlert,
         externalUsers: this.state.selectedExternal,
-        dateStart: this.state.dateStart.toISOString(),
-        dateEnd: this.state.dateEnd.toISOString(),
-        isRecurrence: this.state.selectedRecurrence === 'key0' ? false : true,
+        dateStart: new Date(ds.setHours(ds.getHours() - 3)),
+        dateEnd: new Date(de.setHours(de.getHours() - 3)),
+        isRecurrence: rec === 'key0' ? false : true,
         recurrenceRule: recurrenceRule,
+        eventId: this.state.eventID,
       };
-      console.log(this.state.selectedRecurrence, 'xd');
     } else {
       Alert.alert(
         'Некорректная дата',
         'Дата начала события позже даты окончания',
       );
     }
+    console.log(savedEvent);
     if (this.state.prodCheck) {
       var port = 'https://calendar.bolshoi.ru:8050';
     } else {
       port = 'https://calendartest.bolshoi.ru:8050';
     }
-    fetch(port + '/WCF/BTService.svc/CreateEvent', {
+    fetch(port + '/WCF/BTService.svc/EditEvent', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -245,6 +310,15 @@ export default class CreateScreen extends Component {
     const {selectedUsers} = this.state;
     const {selectedExternal} = this.state;
     const {selectedAlert} = this.state;
+    const {navigation} = this.props;
+    var selectedCollectiveEdit;
+    const item1 = navigation.getParam('item', 'empty');
+    for (var i = 0; i < this.state.collectives.length; i++) {
+      var collectivesEdit = item1.troups;
+      if (this.state.collectives[i].title === collectivesEdit) {
+        selectedCollectiveEdit = this.state.collectives[i].id - 1;
+      }
+    }
     return (
       <ScrollView style={{padding: 10}}>
         <Text
@@ -380,17 +454,17 @@ export default class CreateScreen extends Component {
           />
         </View>
 
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: 'bold',
+            marginTop: 10,
+            marginLeft: 10,
+            color: '#90a4ae',
+          }}>
+          Сцена
+        </Text>
         <View style={{padding: 10}}>
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: 'bold',
-              marginTop: 10,
-              marginLeft: 10,
-              color: '#90a4ae',
-            }}>
-            Сцена
-          </Text>
           <Item picker>
             <Picker
               mode="dialog"
@@ -437,7 +511,11 @@ export default class CreateScreen extends Component {
               placeholder="Выберите коллективы"
               placeholderStyle={{color: '#bfc6ea'}}
               placeholderIconColor="#007aff"
-              selectedValue={this.state.selectedCollective}
+              selectedValue={
+                this.state.selectedCollective === 0
+                  ? selectedCollectiveEdit
+                  : this.state.selectedCollective
+              }
               onValueChange={this.onValueChangeCollective.bind(this)}>
               {this.state.collectives.map(function(item, i) {
                 return <Picker.Item label={item.title} value={i} />;
@@ -460,6 +538,7 @@ export default class CreateScreen extends Component {
           onDateChange={this.onDateStartChange}
           is24hourSource="locale"
           locale="ru"
+          timeZoneOffsetInMinutes="0"
         />
         <Text
           style={{
@@ -476,6 +555,7 @@ export default class CreateScreen extends Component {
           onDateChange={this.onDateEndChange}
           is24hourSource="locale"
           locale="ru"
+          timeZoneOffsetInMinutes="0"
         />
         <Text
           style={{
@@ -501,7 +581,11 @@ export default class CreateScreen extends Component {
             placeholder="Выберите коллективы"
             placeholderStyle={{color: '#bfc6ea'}}
             placeholderIconColor="#007aff"
-            selectedValue={this.state.selectedRecurrence}
+            selectedValue={
+              this.state.selectedReccurence === ''
+                ? item1.recurrence
+                : this.state.selectedRecurrence
+            }
             onValueChange={this.onValueChangeRecurrence.bind(this)}>
             <Picker.Item label="Один раз" value="key0" />
             <Picker.Item label="Раз в день" value="key1" />

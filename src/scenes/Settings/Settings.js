@@ -346,6 +346,8 @@ export default class SettingsScreen extends React.Component {
                     title: content.GetScenesResult[l - 1].Name,
                     color: content.GetScenesResult[l - 1].Color,
                     resourceId: content.GetScenesResult[l - 1].ResourceId,
+                    canWrite: content.GetScenesResult[l - 1].CanWrite,
+                    canApprove: content.GetScenesResult[l - 1].CanApprove,
                   },
                   'modified',
                 );
@@ -360,6 +362,8 @@ export default class SettingsScreen extends React.Component {
                     title: content.GetScenesResult[l - 1].Name,
                     color: content.GetScenesResult[l - 1].Color,
                     resourceId: content.GetScenesResult[l - 1].ResourceId,
+                    canWrite: content.GetScenesResult[l - 1].CanWrite,
+                    canApprove: content.GetScenesResult[l - 1].CanApprove,
                   },
                   'modified',
                 );
@@ -459,6 +463,10 @@ export default class SettingsScreen extends React.Component {
                 var conductor = content1.GetEventsByPeriodResult[p].Conductor;
                 var sceneId = content1.GetEventsByPeriodResult[p].ResourceId;
                 var serverId = content1.GetEventsByPeriodResult[p].Id;
+                var description =
+                  content1.GetEventsByPeriodResult[p].Description;
+                var recurrence =
+                  content1.GetEventsByPeriodResult[p].isRecurrence;
                 realm.write(() => {
                   realm.create(
                     'EventItem',
@@ -475,6 +483,8 @@ export default class SettingsScreen extends React.Component {
                       id: id++,
                       sceneId: sceneId,
                       serverId: serverId,
+                      description: description,
+                      recurrence: recurrence,
                     },
                     'modified',
                   );
@@ -582,17 +592,14 @@ export default class SettingsScreen extends React.Component {
         </Overlay>
         <Overlay
           isVisible={this.state.showSecondModal}
+          fullScreen={true}
+          overlayBackgroundColor="transparent"
           overlayStyle={{
-            width: '80%',
-            height: '15%',
             alignSelf: 'center',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-around',
           }}>
-          <Text style={{alignSelf: 'center'}}>
-            Подождите, идет обновление уведомлений.
-          </Text>
           <ActivityIndicator size="small" color="#0000ff" />
         </Overlay>
         <View
@@ -618,18 +625,9 @@ export default class SettingsScreen extends React.Component {
             <View>
               <Text
                 style={{
-                  fontSize: 30,
+                  fontSize: 20,
                   marginLeft: '5%',
                   textTransform: 'uppercase',
-                }}>
-                {this.state.username}
-              </Text>
-              <Text
-                style={{
-                  fontSize: 14,
-                  marginLeft: '5%',
-                  textTransform: 'uppercase',
-                  color: 'lightgrey',
                 }}>
                 {this.state.username}
               </Text>
@@ -810,6 +808,8 @@ export default class SettingsScreen extends React.Component {
                 todayBackgroundColor="#f2e6ff"
                 selectedDayColor="#1976D2"
                 selectedDayTextColor="#FFFFFF"
+                previousTitle="Пред"
+                nextTitle="След"
                 onDateChange={this.onDateChange}
                 weekdays={['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']}
                 months={[

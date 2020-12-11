@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     zIndex: -1,
-    height: 50,
+    height: 40,
   },
   lightText: {
     color: '#000000',

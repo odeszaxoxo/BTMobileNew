@@ -8,10 +8,13 @@ import {
   Modal,
   TouchableHighlight,
   ScrollView,
+  AsyncStorage,
+  Alert,
 } from 'react-native';
 import realm from '../../services/realm';
 import moment from 'moment';
 import 'moment/locale/ru';
+import {Button, Overlay, Icon} from 'react-native-elements';
 
 export class AgendaItem extends React.PureComponent {
   constructor(props) {
@@ -20,6 +23,15 @@ export class AgendaItem extends React.PureComponent {
       modalVisible: false,
     };
   }
+
+  componentDidMount = async () => {
+    try {
+      const prodCheck = JSON.parse(await AsyncStorage.getItem('development'));
+      this.setState({prodCheck: prodCheck});
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
 
   setModalVisible(visible) {
     this.setState({modalVisible: visible});
@@ -58,6 +70,11 @@ export class AgendaItem extends React.PureComponent {
       B.toString(16).length === 1 ? '0' + B.toString(16) : B.toString(16);
 
     return '#' + RR + GG + BB;
+  };
+
+  goToEditScreen = () => {
+    this.props.navigation.navigate('Edit', {item: this.props.item});
+    this.setModalVisible(!this.state.modalVisible);
   };
 
   render() {
@@ -354,22 +371,100 @@ export class AgendaItem extends React.PureComponent {
                   </Text>
                 </ScrollView>
               </View>
-              <TouchableHighlight
-                onPress={() => {
-                  this.setModalVisible(!this.state.modalVisible);
-                }}
-                underlayColor="transparent"
-                style={{
-                  alignSelf: 'flex-end',
-                  width: '50%',
-                  height: '10%',
-                  justifyContent: 'center',
-                  alignItems: 'flex-end',
-                  marginTop: 0,
-                  borderRadius: 12,
-                }}>
-                <Text style={{fontSize: 16, marginRight: 20}}>Закрыть</Text>
-              </TouchableHighlight>
+              <View
+                style={{display: 'flex', flexDirection: 'row', marginTop: 0}}>
+                <TouchableHighlight
+                  onPress={() => {
+                    const sceneID = this.props.item.sceneId;
+                    const eventID = this.props.item.serverId;
+                    const deleteBody =
+                      this.props.token.slice(0, -1) +
+                      ', "resourceId": ' +
+                      '"' +
+                      sceneID +
+                      '"' +
+                      ', "eventId": ' +
+                      eventID +
+                      '}';
+                    if (this.state.prodCheck) {
+                      var port = 'https://calendar.bolshoi.ru:8050';
+                    } else {
+                      port = 'https://calendartest.bolshoi.ru:8050';
+                    }
+                    Alert.alert(
+                      'Удаление',
+                      'Вы действительно хотите удалить событие?',
+                      [
+                        {
+                          text: 'Удалить',
+                          onPress: () => {
+                            fetch(port + '/WCF/BTService.svc/DeleteEvent', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: deleteBody,
+                            })
+                              .then(response => {
+                                console.log(response);
+                              })
+                              .catch(err => {
+                                console.error(err);
+                              });
+                            this.setModalVisible(!this.state.modalVisible);
+                          },
+                          style: 'cancel',
+                        },
+                        {
+                          text: 'Отмена',
+                          onPress: () => console.log('NO Pressed'),
+                        },
+                      ],
+                      {cancelable: false},
+                    );
+                  }}
+                  underlayColor="transparent"
+                  style={{
+                    width: 60,
+                    height: 40,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginTop: 0,
+                    borderRadius: 12,
+                    marginLeft: 5,
+                  }}>
+                  <Icon name="delete-forever" color="red" />
+                </TouchableHighlight>
+                <Button
+                  title=""
+                  icon={{
+                    name: 'create',
+                    size: 20,
+                    color: 'black',
+                  }}
+                  onPress={this.goToEditScreen}
+                  buttonStyle={{
+                    width: 60,
+                    height: 40,
+                    backgroundColor: 'transparent',
+                  }}
+                />
+                <TouchableHighlight
+                  onPress={() => {
+                    this.setModalVisible(!this.state.modalVisible);
+                  }}
+                  underlayColor="transparent"
+                  style={{
+                    width: 140,
+                    height: 40,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderRadius: 12,
+                    marginLeft: 40,
+                  }}>
+                  <Text style={{fontSize: 16, marginRight: 20}}>Закрыть</Text>
+                </TouchableHighlight>
+              </View>
             </View>
           </View>
         </Modal>

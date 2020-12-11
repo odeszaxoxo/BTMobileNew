@@ -16,6 +16,8 @@ Event.schema = {
     sceneId: 'string',
     id: 'int',
     serverId: 'int',
+    description: 'string',
+    recurrence: 'bool',
   },
   primaryKey: 'id',
 };
@@ -30,6 +32,7 @@ Scene.schema = {
     title: 'string',
     color: 'string',
     resourceId: 'string',
+    canWrite: 'bool',
   },
 };
 

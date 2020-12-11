@@ -72,6 +72,8 @@ export default class DatePickers extends React.Component {
           selectedDayColor="#1976D2"
           selectedDayTextColor="#FFFFFF"
           onDateChange={this.onDateChange}
+          previousTitle="Пред"
+          nextTitle="След"
           weekdays={['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']}
           months={[
             'Январь',

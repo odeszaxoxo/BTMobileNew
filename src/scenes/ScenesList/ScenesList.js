@@ -4,7 +4,7 @@ import {View, AsyncStorage, Image, Text} from 'react-native';
 import SelectMultiple from 'react-native-select-multiple';
 import {isEmpty} from 'lodash';
 import realm from '../../services/realm';
-import {Button} from 'react-native-elements';
+import {Button, Icon} from 'react-native-elements';
 
 var _ = require('lodash');
 
@@ -54,6 +54,7 @@ class ScenesList extends Component {
         label: realm.objects('Scene')[i].title,
         value: realm.objects('Scene')[i].id,
         color: realm.objects('Scene')[i].color,
+        isAllowed: realm.objects('Scene')[i].canWrite,
       };
       list.push(item);
     }
@@ -119,10 +120,19 @@ class ScenesList extends Component {
     navigation.navigate('Agenda');
   };
 
-  renderLabel = label => {
+  renderLabel = (label, rights) => {
     const col = this.state.scenes.find(item => {
       return item.label === label;
     });
+    for (var i = 0; i < this.state.scenes.length; i++) {
+      if (this.state.scenes[i].label === label) {
+        if (this.state.scenes[i].isAllowed) {
+          var rights = true;
+        } else {
+          rights = false;
+        }
+      }
+    }
     return (
       <View
         style={{flexDirection: 'row', alignItems: 'center', height: '100%'}}>
@@ -141,7 +151,14 @@ class ScenesList extends Component {
               backgroundColor: this.shadeColor(col.color, -15),
             }}
           />
-          <Text style={{marginLeft: 10}}>{label}</Text>
+          <Text style={{marginLeft: 10, marginRight: 40}}>{label}</Text>
+          {rights ? (
+            <Icon
+              name="create"
+              color="gray"
+              style={{marginLeft: 40, size: 20}}
+            />
+          ) : null}
         </View>
       </View>
     );
@@ -188,7 +205,7 @@ class ScenesList extends Component {
               selectedItems={this.state.selectedScenes}
               onSelectionsChange={this.onSelectionsChange}
               style={{zIndex: 0, height: '84%'}}
-              rowStyle={{height: 45}}
+              rowStyle={{height: 39}}
               renderLabel={this.renderLabel}
             />
           </View>

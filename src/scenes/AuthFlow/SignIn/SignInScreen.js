@@ -32,6 +32,8 @@ export default class SignInScreen extends React.Component {
       showModal: false,
       showLoginModal: false,
       prodCheck: true,
+      availableScenes: [],
+      collectives: [],
     };
   }
   static navigationOptions = {
@@ -63,7 +65,6 @@ export default class SignInScreen extends React.Component {
               trackColor={{false: '#484848', true: '#212121'}}
             />
           </View>
-
           <View style={styles.loginForm}>
             <View style={styles.input}>
               <Input
@@ -82,7 +83,6 @@ export default class SignInScreen extends React.Component {
                 leftIconContainerStyle={{marginRight: 10}}
               />
             </View>
-
             <View style={styles.input}>
               <Input
                 onChangeText={password => this.setState({password})}
@@ -100,14 +100,12 @@ export default class SignInScreen extends React.Component {
                 leftIconContainerStyle={{marginRight: 10}}
               />
             </View>
-
             <View style={styles.loginButtonContainer}>
               <Button
                 title="Войти!"
                 onPress={this.signInFlow}
                 buttonStyle={{backgroundColor: '#1E151A'}}
               />
-
               <Text
                 style={{
                   display: this.state.correct,
@@ -115,12 +113,11 @@ export default class SignInScreen extends React.Component {
                   fontSize: 16,
                   alignSelf: 'center',
                 }}>
-                Неверный email / пароль.
+                Неверный email / пароль.<Text>' '</Text>
               </Text>
             </View>
           </View>
         </KeyboardAvoidingView>
-
         <View style={styles.credentials}>
           <Text
             h4
@@ -133,7 +130,6 @@ export default class SignInScreen extends React.Component {
             Powered by Adamcode
           </Text>
         </View>
-
         <Overlay
           isVisible={this.state.showModal}
           overlayStyle={{
@@ -145,7 +141,7 @@ export default class SignInScreen extends React.Component {
             justifyContent: 'space-around',
           }}>
           <Text style={{alignSelf: 'center', fontSize: 16}}>
-            Подождите, идет первоначальная загрузка данных( {scenesCounter}
+            Подождите, идет первоначальная загрузка данных({scenesCounter}
             из {this.state.scenesCountMax}
             сцен.)
           </Text>
@@ -162,7 +158,7 @@ export default class SignInScreen extends React.Component {
             justifyContent: 'space-around',
           }}>
           <Text style={{alignSelf: 'center', fontSize: 16}}>
-            Подождите, идет проверка данных.
+            Подождите, идет проверка данных.<Text>' '</Text>
           </Text>
           <ActivityIndicator size="small" color="#0000ff" />
         </Overlay>
@@ -190,6 +186,75 @@ export default class SignInScreen extends React.Component {
     }
     var testUURl = port + '/WCF/BTService.svc/GetScenes';
     console.log(testBody, testUURl);
+    await NetInfo.fetch().then(async state => {
+      if (state.isConnected === true && this.state.userToken !== null) {
+        let rawResponseScenes = await fetch(
+          port + '/WCF/BTService.svc/GetCollectives',
+          {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: testBody,
+          },
+        ).catch(function(error) {
+          console.log(error);
+          return null;
+        });
+        const collectives = await rawResponseScenes.json();
+        this.setState({collectives: collectives.GetCollectivesResult});
+        await AsyncStorage.setItem(
+          'collectives',
+          JSON.stringify(this.state.collectives),
+        );
+      }
+    });
+    await NetInfo.fetch().then(async state => {
+      if (state.isConnected === true && this.state.userToken !== null) {
+        let rawResponseScenes = await fetch(
+          port + '/WCF/BTService.svc/GetUsers',
+          {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: testBody,
+          },
+        ).catch(function(error) {
+          console.log(error);
+          return null;
+        });
+        const users = await rawResponseScenes.json();
+        this.setState({users: users.GetUsersResult});
+        await AsyncStorage.setItem('users', JSON.stringify(this.state.users));
+      }
+    });
+    await NetInfo.fetch().then(async state => {
+      if (state.isConnected === true && this.state.userToken !== null) {
+        let rawResponseScenes = await fetch(
+          port + '/WCF/BTService.svc/GetExternalPersons',
+          {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+            },
+            body: testBody,
+          },
+        ).catch(function(error) {
+          console.log(error);
+          return null;
+        });
+        const external = await rawResponseScenes.json();
+        this.setState({external: external.GetExternalPersonsResult});
+        await AsyncStorage.setItem(
+          'external',
+          JSON.stringify(this.state.external),
+        );
+      }
+    });
     await NetInfo.fetch().then(async state => {
       if (state.isConnected === true && this.state.usertoken !== null) {
         let rawResponseScenes = await fetch(
@@ -224,6 +289,7 @@ export default class SignInScreen extends React.Component {
               this.setState({realm});
             }
           });
+          var availableScenesArr = [];
           realm.write(() => {
             if (realm.objects('Scene') !== null) {
               realm.delete(realm.objects('Scene'));
@@ -236,9 +302,21 @@ export default class SignInScreen extends React.Component {
                     title: content.GetScenesResult[l - 1].Name,
                     color: content.GetScenesResult[l - 1].Color,
                     resourceId: content.GetScenesResult[l - 1].ResourceId,
+                    canWrite: content.GetScenesResult[l - 1].CanWrite,
+                    canApprove: content.GetScenesResult[l - 1].CanApprove,
                   },
                   'modified',
                 );
+                console.log(
+                  content.GetScenesResult[l - 1].CanApprove,
+                  content.GetScenesResult[l - 1].ResourceId,
+                );
+                if (content.GetScenesResult[l - 1].CanApprove === true) {
+                  console.log(content.GetScenesResult[l - 1].ResourceId);
+                  availableScenesArr.push(
+                    content.GetScenesResult[l - 1].ResourceId,
+                  );
+                }
               }
             } else {
               for (var l = 1; l <= content.GetScenesResult.length; l++) {
@@ -250,11 +328,24 @@ export default class SignInScreen extends React.Component {
                     title: content.GetScenesResult[l - 1].Name,
                     color: content.GetScenesResult[l - 1].Color,
                     resourceId: content.GetScenesResult[l - 1].ResourceId,
+                    canWrite: content.GetScenesResult[l - 1].CanWrite,
+                    canApprove: content.GetScenesResult[l - 1].CanApprove,
                   },
                   'modified',
                 );
+                console.log(
+                  content.GetScenesResult[l - 1].CanApprove,
+                  content.GetScenesResult[l - 1].ResourceId,
+                );
+                if (content.GetScenesResult[l - 1].CanApprove === true) {
+                  console.log(content.GetScenesResult[l - 1].ResourceId);
+                  availableScenesArr.push(
+                    content.GetScenesResult[l - 1].ResourceId,
+                  );
+                }
               }
             }
+            this.setState({availableScenes: availableScenesArr});
           });
         } else {
           return Alert.alert(
@@ -266,6 +357,7 @@ export default class SignInScreen extends React.Component {
         this.setState({realm});
       }
     });
+    console.log(this.state.availableScenes);
     await NetInfo.fetch().then(async state => {
       if (
         state.isConnected === true &&
@@ -348,6 +440,10 @@ export default class SignInScreen extends React.Component {
                 var conductor = content1.GetEventsByPeriodResult[p].Conductor;
                 var sceneId = content1.GetEventsByPeriodResult[p].ResourceId;
                 var serverId = content1.GetEventsByPeriodResult[p].Id;
+                var description =
+                  content1.GetEventsByPeriodResult[p].Description;
+                var recurrence =
+                  content1.GetEventsByPeriodResult[p].isRecurrence;
                 realm.write(() => {
                   realm.create(
                     'EventItem',
@@ -364,6 +460,8 @@ export default class SignInScreen extends React.Component {
                       id: id++,
                       sceneId: sceneId,
                       serverId: serverId,
+                      description: description,
+                      recurrence: recurrence,
                     },
                     'modified',
                   );
@@ -479,6 +577,10 @@ export default class SignInScreen extends React.Component {
               await AsyncStorage.setItem('smallCheck', JSON.stringify(true));
               await AsyncStorage.setItem('bigTime', 'key0');
               await AsyncStorage.setItem('smallTime', 'key0');
+              await AsyncStorage.setItem(
+                'scenes',
+                JSON.stringify(this.state.availableScenes),
+              );
               if (_.isEmpty(realm.objects('EventItem'))) {
                 await this.navigate(testBody);
               }
