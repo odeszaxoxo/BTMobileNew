@@ -454,6 +454,17 @@ export default class SettingsScreen extends React.Component {
                   date.substring(3).substring(0, 2) +
                   '-' +
                   date.substring(0, 2);
+                let dateEnd = content1.GetEventsByPeriodResult[
+                  p
+                ].EndDateStr.substring(0, 10)
+                  .split('.')
+                  .join('-');
+                let dateEndFormatted =
+                  dateEnd.substring(6) +
+                  '-' +
+                  dateEnd.substring(3).substring(0, 2) +
+                  '-' +
+                  dateEnd.substring(0, 2);
                 let alertedPersons =
                   content1.GetEventsByPeriodResult[p].AlertedPersons;
                 let troups = content1.GetEventsByPeriodResult[p].Troups;
@@ -485,6 +496,7 @@ export default class SettingsScreen extends React.Component {
                       serverId: serverId,
                       description: description,
                       recurrence: recurrence,
+                      dateEnd: dateEndFormatted,
                     },
                     'modified',
                   );
@@ -592,6 +604,7 @@ export default class SettingsScreen extends React.Component {
         </Overlay>
         <Overlay
           isVisible={this.state.showSecondModal}
+          windowBackgroundColor="transparent"
           fullScreen={true}
           overlayBackgroundColor="transparent"
           overlayStyle={{

@@ -247,7 +247,6 @@ export default class Store extends React.Component {
             moment(lastMomentTime).format('YYYY-MM-DDTHH:mm:ss') +
             '/' +
             moment(newMomentTime).format('YYYY-MM-DDTHH:mm:ss');
-          console.log(urlTest);
           let rawResponse1 = await fetch(urlTest, {
             method: 'POST',
             headers: {
@@ -259,10 +258,15 @@ export default class Store extends React.Component {
             console.log(e);
             return null;
           });
+          console.log(urlTest, rawResponse1);
           const stat1 = rawResponse1.status;
           if (stat1 === 200) {
             const content1 = await rawResponse1.json();
-            for (var s = 0; s < content1.GetModifiedEventsByPeriodResult.length; s++) {
+            for (
+              var s = 0;
+              s < content1.GetModifiedEventsByPeriodResult.length;
+              s++
+            ) {
               //console.log('MOD' + s, content1.GetModifiedEventsByPeriodResult[s].title);
             }
             if (_.isEmpty(content1.GetModifiedEventsByPeriodResult)) {
@@ -290,6 +294,17 @@ export default class Store extends React.Component {
                   date.substring(3).substring(0, 2) +
                   '-' +
                   date.substring(0, 2);
+                let dateEnd = content1.GetEventsByPeriodResult[
+                  p
+                ].EndDateStr.substring(0, 10)
+                  .split('.')
+                  .join('-');
+                let dateEndFormatted =
+                  dateEnd.substring(6) +
+                  '-' +
+                  dateEnd.substring(3).substring(0, 2) +
+                  '-' +
+                  dateEnd.substring(0, 2);
                 let alertedPersons =
                   content1.GetModifiedEventsByPeriodResult[p].AlertedPersons;
                 let troups = content1.GetModifiedEventsByPeriodResult[p].Troups;
@@ -345,11 +360,11 @@ export default class Store extends React.Component {
                           id: realm.objects('EventItem').length + 1,
                           description: description,
                           recurrence: recurrence,
+                          dateEnd: dateEndFormatted,
                         },
                         'modified',
                       );
                       this.setState({realm});
-                      console.log(serverId);
                     });
                   } else {
                     let refreshed = realm
@@ -374,11 +389,11 @@ export default class Store extends React.Component {
                           id: refreshed,
                           description: description,
                           recurrence: recurrence,
+                          dateEnd: dateEndFormatted,
                         },
                         'modified',
                       );
                       this.setState({realm});
-                      console.log(refreshed);
                     });
                   }
                 }
@@ -400,7 +415,6 @@ export default class Store extends React.Component {
         }
       }
     });
-    console.log(realm.objects('EventItem').length);
     await AsyncStorage.removeItem('ModifiedRefresh');
     await AsyncStorage.setItem('ModifiedRefresh', JSON.stringify(refreshDate));
   };
@@ -446,6 +460,7 @@ export default class Store extends React.Component {
       console.log(e);
       return null;
     });
+    console.log(urlTest, rawResponse1);
     const stat = rawResponse1.status;
     if (stat === 200) {
       const content1 = await rawResponse1.json();
@@ -528,7 +543,6 @@ export default class Store extends React.Component {
     }
     items = _.sortBy(items, ['date', 'time']);
     this.setState({items: items});
-    console.log(items.length);
     var index = _.findIndex(items, function(item) {
       return item.date === moment(starter).format('YYYY-MM-DD');
     });
@@ -719,6 +733,7 @@ export default class Store extends React.Component {
           isVisible={this.state.showModal}
           fullScreen={true}
           overlayBackgroundColor="transparent"
+          windowBackgroundColor="transparent"
           overlayStyle={{
             backgroundColor: 'transparent',
             alignSelf: 'center',
@@ -732,6 +747,7 @@ export default class Store extends React.Component {
           isVisible={this.state.showRefreshModal}
           fullScreen={true}
           overlayBackgroundColor="transparent"
+          windowBackgroundColor="transparent"
           overlayStyle={{
             alignSelf: 'center',
             display: 'flex',

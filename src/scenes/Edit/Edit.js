@@ -26,9 +26,9 @@ export default class EditScreen extends Component {
     this.state = {
       eventTitle: '',
       eventDesciption: '',
-      selected: undefined,
+      selected: 0,
       scenes: [],
-      selectedCollective: '',
+      selectedCollective: 0,
       collectivesArray: [],
       collectives: [],
       usersArray: [],
@@ -44,6 +44,7 @@ export default class EditScreen extends Component {
   }
   static navigationOptions = {
     title: 'Изменение события',
+    headerBackTitle: 'Назад',
   };
 
   componentDidMount() {
@@ -223,68 +224,89 @@ export default class EditScreen extends Component {
           ';COUNT=7;INTERVAL=1;WKST=' +
           weekDay;
       } else {
-        freq = 'FREQ=WEEKLY';
-        recurrenceRule =
-          'DTSTART:' +
-          startDate +
-          'RRULE:' +
-          freq +
-          ';UNTIL=' +
-          endDate +
-          ';COUNT=4;INTERVAL=1;WKST=' +
-          weekDay;
+        if (this.state.selectedRecurrence === 'key2') {
+          freq = 'FREQ=WEEKLY';
+          recurrenceRule =
+            'DTSTART:' +
+            startDate +
+            'RRULE:' +
+            freq +
+            ';UNTIL=' +
+            endDate +
+            ';COUNT=4;INTERVAL=1;WKST=' +
+            weekDay;
+        } else {
+          freq = 'FREQ=MONTHLY';
+          recurrenceRule =
+            'DTSTART:' +
+            startDate +
+            'RRULE:' +
+            freq +
+            ';UNTIL=' +
+            endDate +
+            ';COUNT=12;INTERVAL=1;WKST=' +
+            weekDay;
+        }
       }
     }
     var ds = new Date(this.state.dateStart);
     var de = new Date(this.state.dateEnd);
-    if (new Date(this.state.dateEnd) > new Date(this.state.dateStart)) {
-      var savedEvent = {
-        username: this.state.userToken.username,
-        password: this.state.userToken.password,
-        isLogin: this.state.userToken.isLogin,
-        title: this.state.eventTitle,
-        description: this.state.eventDesciption,
-        resourceId: this.state.scenes[this.state.selected].id,
-        collectiveId: this.state.collectives[this.state.selectedCollective].id,
-        isPlan: false,
-        isDisableNotifications: true,
-        conductorUser: 0,
-        requiredUsers: this.state.selectedUsers,
-        dutyUsers: this.state.selectedAlert,
-        alertedUsers: this.state.selectedAlert,
-        externalUsers: this.state.selectedExternal,
-        dateStart: new Date(ds.setHours(ds.getHours() - 3)),
-        dateEnd: new Date(de.setHours(de.getHours() - 3)),
-        isRecurrence: rec === 'key0' ? false : true,
-        recurrenceRule: recurrenceRule,
-        eventId: this.state.eventID,
-      };
+    if (this.state.eventTitle !== '') {
+      if (new Date(this.state.dateEnd) > new Date(this.state.dateStart)) {
+        var savedEvent = {
+          username: this.state.userToken.username,
+          password: this.state.userToken.password,
+          isLogin: this.state.userToken.isLogin,
+          title: this.state.eventTitle,
+          description: this.state.eventDesciption,
+          resourceId: this.state.scenes[this.state.selected].id,
+          collectiveId: this.state.collectives[this.state.selectedCollective]
+            .id,
+          isPlan: false,
+          isDisableNotifications: true,
+          conductorUser: 0,
+          requiredUsers: this.state.selectedUsers,
+          dutyUsers: this.state.selectedAlert,
+          alertedUsers: this.state.selectedAlert,
+          externalUsers: this.state.selectedExternal,
+          dateStart: new Date(ds.setHours(ds.getHours() - 3)),
+          dateEnd: new Date(de.setHours(de.getHours() - 3)),
+          isRecurrence: rec === 'key0' ? false : true,
+          recurrenceRule: recurrenceRule,
+          eventId: this.state.eventID,
+        };
+        console.log(savedEvent);
+        if (this.state.prodCheck) {
+          var port = 'https://calendar.bolshoi.ru:8050';
+        } else {
+          port = 'https://calendartest.bolshoi.ru:8050';
+        }
+        fetch(port + '/WCF/BTService.svc/EditEvent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(savedEvent),
+        })
+          .then(response => {
+            console.log(response);
+            this.props.navigation.navigate('Agenda');
+          })
+          .catch(err => {
+            console.error(err);
+          });
+      } else {
+        Alert.alert(
+          'Некорректная дата',
+          'Дата начала события позже даты окончания',
+        );
+      }
     } else {
       Alert.alert(
-        'Некорректная дата',
-        'Дата начала события позже даты окончания',
+        'Заполните обязательные поля',
+        'Обязательные поля отмечены звездочкой.',
       );
     }
-    console.log(savedEvent);
-    if (this.state.prodCheck) {
-      var port = 'https://calendar.bolshoi.ru:8050';
-    } else {
-      port = 'https://calendartest.bolshoi.ru:8050';
-    }
-    fetch(port + '/WCF/BTService.svc/EditEvent', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(savedEvent),
-    })
-      .then(response => {
-        console.log(response);
-        this.props.navigation.navigate('Agenda');
-      })
-      .catch(err => {
-        console.error(err);
-      });
   };
 
   onSelectedUsersChange = selectedUsers => {
@@ -325,11 +347,21 @@ export default class EditScreen extends Component {
           style={{
             fontSize: 16,
             fontWeight: 'bold',
-            marginTop: 10,
+            marginTop: 7,
             marginLeft: 10,
             color: '#90a4ae',
           }}>
           Название
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: 'bold',
+              marginTop: 7,
+              color: 'red',
+            }}>
+            {' '}
+            *
+          </Text>
         </Text>
         <Input
           onChangeText={eventTitle => this.setState({eventTitle})}
@@ -340,7 +372,7 @@ export default class EditScreen extends Component {
           style={{
             fontSize: 16,
             fontWeight: 'bold',
-            marginTop: 20,
+            marginTop: 10,
             marginLeft: 10,
             color: '#90a4ae',
           }}>
@@ -351,12 +383,12 @@ export default class EditScreen extends Component {
           value={this.state.eventDesciption}
           inputStyle={{color: 'black', fontSize: 20}}
         />
-        <View style={{marginTop: 20, padding: 10}}>
+        <View style={{marginTop: 10, padding: 10}}>
           <Text
             style={{
               fontSize: 16,
               fontWeight: 'bold',
-              marginTop: 10,
+              marginTop: 7,
               marginBottom: 10,
               marginLeft: 0,
               color: '#90a4ae',
@@ -367,6 +399,9 @@ export default class EditScreen extends Component {
             hideTags
             items={this.state.users}
             uniqueKey="id"
+            ref={component => {
+              this.multiSelect = component;
+            }}
             onSelectedItemsChange={this.onSelectedAlertChange}
             selectedItems={selectedAlert}
             selectText="  Выбрать пользователей"
@@ -384,13 +419,17 @@ export default class EditScreen extends Component {
             submitButtonColor="#CCC"
             submitButtonText="Принять"
           />
+          <View>
+            {this.multiSelect &&
+              this.multiSelect.getSelectedItemsExt(selectedAlert)}
+          </View>
         </View>
-        <View style={{marginTop: 20, padding: 10}}>
+        <View style={{marginTop: 10, padding: 10}}>
           <Text
             style={{
               fontSize: 16,
               fontWeight: 'bold',
-              marginTop: 10,
+              marginTop: 7,
               marginBottom: 10,
               marginLeft: 0,
               color: '#90a4ae',
@@ -399,6 +438,9 @@ export default class EditScreen extends Component {
           </Text>
           <MultiSelect
             hideTags
+            ref={component => {
+              this.multiSelect = component;
+            }}
             items={this.state.external}
             uniqueKey="id"
             onSelectedItemsChange={this.onSelectedExternalChange}
@@ -418,13 +460,17 @@ export default class EditScreen extends Component {
             submitButtonColor="#CCC"
             submitButtonText="Принять"
           />
+          <View>
+            {this.multiSelect &&
+              this.multiSelect.getSelectedItemsExt(selectedExternal)}
+          </View>
         </View>
-        <View style={{marginTop: 20, padding: 10}}>
+        <View style={{marginTop: 10, padding: 10}}>
           <Text
             style={{
               fontSize: 16,
               fontWeight: 'bold',
-              marginTop: 10,
+              marginTop: 7,
               marginBottom: 10,
               marginLeft: 0,
               color: '#90a4ae',
@@ -435,6 +481,9 @@ export default class EditScreen extends Component {
             hideTags
             items={this.state.users}
             uniqueKey="id"
+            ref={component => {
+              this.multiSelect = component;
+            }}
             onSelectedItemsChange={this.onSelectedUsersChange}
             selectedItems={selectedUsers}
             selectText="  Выбрать пользователей"
@@ -452,17 +501,31 @@ export default class EditScreen extends Component {
             submitButtonColor="#CCC"
             submitButtonText="Принять"
           />
+          <View>
+            {this.multiSelect &&
+              this.multiSelect.getSelectedItemsExt(selectedUsers)}
+          </View>
         </View>
 
         <Text
           style={{
             fontSize: 16,
             fontWeight: 'bold',
-            marginTop: 10,
+            marginTop: 7,
             marginLeft: 10,
             color: '#90a4ae',
           }}>
           Сцена
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: 'bold',
+              marginTop: 7,
+              color: 'red',
+            }}>
+            {' '}
+            *
+          </Text>
         </Text>
         <View style={{padding: 10}}>
           <Item picker>
@@ -490,12 +553,22 @@ export default class EditScreen extends Component {
             style={{
               fontSize: 16,
               fontWeight: 'bold',
-              marginTop: 10,
+              marginTop: 7,
               marginBottom: 10,
               marginLeft: 0,
               color: '#90a4ae',
             }}>
             Коллектив
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: 'bold',
+                marginTop: 7,
+                color: 'red',
+              }}>
+              {' '}
+              *
+            </Text>
           </Text>
           <Item picker>
             <Picker
@@ -527,7 +600,7 @@ export default class EditScreen extends Component {
           style={{
             fontSize: 16,
             fontWeight: 'bold',
-            marginTop: 20,
+            marginTop: 10,
             marginLeft: 10,
             color: '#90a4ae',
           }}>
@@ -544,7 +617,7 @@ export default class EditScreen extends Component {
           style={{
             fontSize: 16,
             fontWeight: 'bold',
-            marginTop: 20,
+            marginTop: 10,
             marginLeft: 10,
             color: '#90a4ae',
           }}>
@@ -561,7 +634,7 @@ export default class EditScreen extends Component {
           style={{
             fontSize: 16,
             fontWeight: 'bold',
-            marginTop: 10,
+            marginTop: 7,
             marginLeft: 10,
             color: '#90a4ae',
           }}>
@@ -588,11 +661,12 @@ export default class EditScreen extends Component {
             }
             onValueChange={this.onValueChangeRecurrence.bind(this)}>
             <Picker.Item label="Один раз" value="key0" />
-            <Picker.Item label="Раз в день" value="key1" />
-            <Picker.Item label="Раз в неделю" value="key2" />
+            <Picker.Item label="Ежедневно" value="key1" />
+            <Picker.Item label="Еженедельно" value="key2" />
+            <Picker.Item label="Ежемесячно" value="key3" />
           </Picker>
         </Item>
-        <View style={{marginTop: 50, marginBottom: 50}}>
+        <View style={{marginTop: 30, marginBottom: 50}}>
           <Button title="Сохранить" onPress={this.saveEvent} />
         </View>
       </ScrollView>

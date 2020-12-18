@@ -425,6 +425,17 @@ export default class SignInScreen extends React.Component {
                 ].StartDateStr.substring(0, 10)
                   .split('.')
                   .join('-');
+                let dateEnd = content1.GetEventsByPeriodResult[
+                  p
+                ].EndDateStr.substring(0, 10)
+                  .split('.')
+                  .join('-');
+                let dateEndFormatted =
+                  dateEnd.substring(6) +
+                  '-' +
+                  dateEnd.substring(3).substring(0, 2) +
+                  '-' +
+                  dateEnd.substring(0, 2);
                 let dateFormatted =
                   date.substring(6) +
                   '-' +
@@ -450,6 +461,7 @@ export default class SignInScreen extends React.Component {
                     {
                       title: content1.GetEventsByPeriodResult[p].Title,
                       date: dateFormatted,
+                      dateEnd: dateEndFormatted,
                       scene: l + 1,
                       time: eventTime,
                       alerted: alertedPersons,
@@ -528,6 +540,7 @@ export default class SignInScreen extends React.Component {
             Alert.alert('Ошибка', 'Сервер недоступен');
             return null;
           });
+          console.log(port + '/WCF/BTService.svc/TestLogin', testBody);
           if (rawResponse !== null) {
             const content2 = await rawResponse.json();
             if (content2.TestLoginResult) {
@@ -568,6 +581,7 @@ export default class SignInScreen extends React.Component {
             Alert.alert('Ошибка', 'Сервер недоступен');
             return null;
           });
+          console.log(port + '/WCF/BTService.svc/TestLogin', testBody);
           if (rawResponse !== null) {
             const content2 = await rawResponse.json();
             if (content2.TestLoginResult) {
@@ -602,12 +616,21 @@ export default class SignInScreen extends React.Component {
         password: this.state.password,
         isLogin: '1',
       });
+      // var testBody =
+      //   '{username: ' +
+      //   tag +
+      //   '\\' +
+      //   '\\' +
+      //   userUntag +
+      //   ', password: ' +
+      //   this.state.password +
+      //   ', isLogin: 1}';
       (async () => {
         const rawResponse = await fetch(port + '/WCF/BTService.svc/TestLogin', {
           method: 'POST',
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
+            'Content-Type': 'multipart/json',
           },
           body: testBody,
         }).catch(function(e) {
@@ -615,6 +638,11 @@ export default class SignInScreen extends React.Component {
           Alert.alert('Ошибка', 'Сервер недоступен');
           return null;
         });
+        console.log(
+          port + '/WCF/BTService.svc/TestLogin',
+          testBody,
+          rawResponse,
+        );
         if (rawResponse !== null) {
           const content2 = await rawResponse.json();
           if (content2.TestLoginResult) {

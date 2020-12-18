@@ -18,6 +18,7 @@ Event.schema = {
     serverId: 'int',
     description: 'string',
     recurrence: 'bool',
+    dateEnd: 'string',
   },
   primaryKey: 'id',
 };
