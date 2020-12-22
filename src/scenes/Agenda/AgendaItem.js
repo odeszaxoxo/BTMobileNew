@@ -86,6 +86,15 @@ export class AgendaItem extends React.PureComponent {
       this.props.item.time.length,
       this.props.item.time.length - 5,
     );
+    var dateEndFormatted = 'same';
+    if (
+      new Date(this.props.item.date).getDate() !==
+      new Date(this.props.item.dateEnd).getDate()
+    ) {
+      dateEndFormatted = moment(this.props.item.dateEnd).format('D MMMM');
+    } else {
+      dateEndFormatted = 'same';
+    }
     return (
       <TouchableOpacity
         onPress={() => {
@@ -162,16 +171,72 @@ export class AgendaItem extends React.PureComponent {
                 }}>
                 {sceneName}
               </Text>
-              <Text
-                style={{
-                  fontWeight: '700',
-                  fontSize: 12,
-                  textAlignVertical: 'bottom',
-                  color: '#90a4ae',
-                  marginRight: 10,
-                }}>
-                {dateFormatted}
-              </Text>
+              {dateEndFormatted === 'same' ? (
+                <View>
+                  <Text
+                    style={{
+                      fontWeight: '700',
+                      fontSize: 12,
+                      textAlignVertical: 'bottom',
+                      color: '#90a4ae',
+                      marginRight: 10,
+                    }}>
+                    {dateFormatted}
+                  </Text>
+                </View>
+              ) : (
+                <View style={{display: 'flex', position: 'relative'}}>
+                  <Text
+                    style={{
+                      fontWeight: '700',
+                      fontSize: 12,
+                      textAlignVertical: 'bottom',
+                      color: '#90a4ae',
+                      position: 'absolute',
+                      right: 10,
+                      bottom: 14,
+                    }}>
+                    {dateFormatted}
+                  </Text>
+                  <Text
+                    style={{
+                      fontWeight: '700',
+                      fontSize: 12,
+                      textAlignVertical: 'bottom',
+                      color: '#90a4ae',
+                      marginRight: 10,
+                    }}>
+                    {dateEndFormatted}
+                  </Text>
+                </View>
+              )}
+
+              {/* <View style={{display: 'flex', position: 'relative'}}>
+                <Text
+                  style={{
+                    fontWeight: '700',
+                    fontSize: 12,
+                    textAlignVertical: 'bottom',
+                    color: '#90a4ae',
+                    marginRight: 10,
+                  }}>
+                  {dateFormatted}
+                </Text>
+                {dateEndFormatted === 'same' ? null : (
+                  <Text
+                    style={{
+                      fontWeight: '700',
+                      fontSize: 12,
+                      textAlignVertical: 'bottom',
+                      color: '#90a4ae',
+                      position: 'absolute',
+                      right: 10,
+                      bottom: 14,
+                    }}>
+                    {dateEndFormatted}
+                  </Text>
+                )}
+              </View> */}
             </View>
           </View>
         </View>
@@ -273,15 +338,45 @@ export class AgendaItem extends React.PureComponent {
                         </Text>
                       </View>
                     </View>
-                    <Text
-                      style={{
-                        fontWeight: '700',
-                        fontSize: 15,
-                        color: '#90a4ae',
-                        marginRight: 10,
-                      }}>
-                      {dateFormatted}
-                    </Text>
+                    {dateEndFormatted === 'same' ? (
+                      <View>
+                        <Text
+                          style={{
+                            fontWeight: '700',
+                            fontSize: 12,
+                            textAlignVertical: 'bottom',
+                            color: '#90a4ae',
+                            marginRight: 10,
+                          }}>
+                          {dateFormatted}
+                        </Text>
+                      </View>
+                    ) : (
+                      <View style={{display: 'flex', position: 'relative'}}>
+                        <Text
+                          style={{
+                            fontWeight: '700',
+                            fontSize: 12,
+                            textAlignVertical: 'bottom',
+                            color: '#90a4ae',
+                            position: 'absolute',
+                            right: 10,
+                            bottom: 0,
+                          }}>
+                          {dateEndFormatted}
+                        </Text>
+                        <Text
+                          style={{
+                            fontWeight: '700',
+                            fontSize: 12,
+                            textAlignVertical: 'bottom',
+                            color: '#90a4ae',
+                            marginRight: 10,
+                          }}>
+                          {dateFormatted}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                   <Text
                     style={{

@@ -616,21 +616,12 @@ export default class SignInScreen extends React.Component {
         password: this.state.password,
         isLogin: '1',
       });
-      // var testBody =
-      //   '{username: ' +
-      //   tag +
-      //   '\\' +
-      //   '\\' +
-      //   userUntag +
-      //   ', password: ' +
-      //   this.state.password +
-      //   ', isLogin: 1}';
       (async () => {
         const rawResponse = await fetch(port + '/WCF/BTService.svc/TestLogin', {
           method: 'POST',
           headers: {
             Accept: 'application/json',
-            'Content-Type': 'multipart/json',
+            'Content-Type': 'application/json',
           },
           body: testBody,
         }).catch(function(e) {
@@ -638,11 +629,6 @@ export default class SignInScreen extends React.Component {
           Alert.alert('Ошибка', 'Сервер недоступен');
           return null;
         });
-        console.log(
-          port + '/WCF/BTService.svc/TestLogin',
-          testBody,
-          rawResponse,
-        );
         if (rawResponse !== null) {
           const content2 = await rawResponse.json();
           if (content2.TestLoginResult) {

@@ -7,6 +7,7 @@ import {
   AsyncStorage,
   ScrollView,
   Alert,
+  TextInput,
 } from 'react-native';
 import {Input} from 'react-native-elements';
 import moment from 'moment';
@@ -40,6 +41,10 @@ export default class EditScreen extends Component {
       dateEnd: new Date(),
       selectedRecurrence: '',
       eventID: undefined,
+      reqDate: new Date(),
+      recDays: 1,
+      recWeeks: 1,
+      recMonths: 1,
     };
   }
   static navigationOptions = {
@@ -143,8 +148,9 @@ export default class EditScreen extends Component {
     }
     var startDate = item1.date;
     var startTime = item1.time.split(' - ');
+    var endDate = item1.dateEnd;
     var startDateTime = startDate + 'T' + startTime[0] + ':00Z';
-    var endDateTime = startDate + 'T' + startTime[1] + ':00Z';
+    var endDateTime = endDate + 'T' + startTime[1] + ':00Z';
     var offset = new Date().getTimezoneOffset() / 60;
     this.setState({
       dateStart: new Date(startDateTime),
@@ -188,6 +194,10 @@ export default class EditScreen extends Component {
     var weekDays = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
     const {navigation} = this.props;
     const item1 = navigation.getParam('item', 'empty');
+    this.setState({reqDate: this.state.dateEnd});
+    var endDate = this.state.reqDate;
+    var reqDays = null;
+    var reqForm = null;
     if (this.state.selectedRecurrence === '') {
       var rec = item1.recurrence ? 'key1' : 'key0';
     } else {
@@ -204,15 +214,19 @@ export default class EditScreen extends Component {
         .join('')
         .split(':')
         .join('');
-      var endDate = new Date(this.state.dateEnd.setMilliseconds(0))
-        .toISOString()
-        .replace(/\.\d+/, '')
-        .split('-')
-        .join('')
-        .split(':')
-        .join('');
       var freq = '';
       if (this.state.selectedRecurrence === 'key1') {
+        let reqDate = this.state.reqDate;
+        reqDays =
+          new Date(reqDate).getDate() + parseInt(this.state.recDays, 10);
+        reqForm = new Date(reqDate.setDate(reqDays));
+        endDate = new Date(reqForm.setMilliseconds(0))
+          .toISOString()
+          .replace(/\.\d+/, '')
+          .split('-')
+          .join('')
+          .split(':')
+          .join('');
         freq = 'FREQ=DAILY';
         recurrenceRule =
           'DTSTART:' +
@@ -221,10 +235,22 @@ export default class EditScreen extends Component {
           freq +
           ';UNTIL=' +
           endDate +
-          ';COUNT=7;INTERVAL=1;WKST=' +
+          ';INTERVAL=1;WKST=' +
           weekDay;
       } else {
         if (this.state.selectedRecurrence === 'key2') {
+          let reqDate = this.state.reqDate;
+          reqDays =
+            new Date(reqDate).getDate() + parseInt(this.state.recWeeks, 10) * 7;
+          reqForm = new Date(reqDate.setDate(reqDays));
+          endDate = new Date(reqForm.setMilliseconds(0))
+            .toISOString()
+            .replace(/\.\d+/, '')
+            .split('-')
+            .join('')
+            .split(':')
+            .join('');
+          console.log(endDate);
           freq = 'FREQ=WEEKLY';
           recurrenceRule =
             'DTSTART:' +
@@ -233,9 +259,21 @@ export default class EditScreen extends Component {
             freq +
             ';UNTIL=' +
             endDate +
-            ';COUNT=4;INTERVAL=1;WKST=' +
+            ';INTERVAL=1;WKST=' +
             weekDay;
         } else {
+          let reqDate = this.state.reqDate;
+          reqDays =
+            new Date(reqDate).getMonth() + parseInt(this.state.recMonths, 10);
+          reqForm = new Date(reqDate.setMonth(reqDays));
+          endDate = new Date(reqForm.setMilliseconds(0))
+            .toISOString()
+            .replace(/\.\d+/, '')
+            .split('-')
+            .join('')
+            .split(':')
+            .join('');
+          console.log(endDate);
           freq = 'FREQ=MONTHLY';
           recurrenceRule =
             'DTSTART:' +
@@ -244,7 +282,7 @@ export default class EditScreen extends Component {
             freq +
             ';UNTIL=' +
             endDate +
-            ';COUNT=12;INTERVAL=1;WKST=' +
+            ';INTERVAL=1;WKST=' +
             weekDay;
         }
       }
@@ -281,20 +319,20 @@ export default class EditScreen extends Component {
         } else {
           port = 'https://calendartest.bolshoi.ru:8050';
         }
-        fetch(port + '/WCF/BTService.svc/EditEvent', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(savedEvent),
-        })
-          .then(response => {
-            console.log(response);
-            this.props.navigation.navigate('Agenda');
-          })
-          .catch(err => {
-            console.error(err);
-          });
+        // fetch(port + '/WCF/BTService.svc/EditEvent', {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify(savedEvent),
+        // })
+        //   .then(response => {
+        //     console.log(response);
+        //     this.props.navigation.navigate('Agenda');
+        //   })
+        //   .catch(err => {
+        //     console.error(err);
+        //   });
       } else {
         Alert.alert(
           'Некорректная дата',
@@ -630,7 +668,18 @@ export default class EditScreen extends Component {
           locale="ru"
           timeZoneOffsetInMinutes="0"
         />
-        <Text
+        {this.state.selectedRecurrence !== 'key0' ? (
+          <Text
+            style={{
+              fontSize: 15,
+              marginTop: 15,
+              marginLeft: 10,
+              color: '#90a4ae',
+            }}>
+            Повторяющееся
+          </Text>
+        ) : null}
+        {/* <Text
           style={{
             fontSize: 16,
             fontWeight: 'bold',
@@ -666,6 +715,51 @@ export default class EditScreen extends Component {
             <Picker.Item label="Ежемесячно" value="key3" />
           </Picker>
         </Item>
+        <View>
+          {this.state.selectedRecurrence === 'key1' ? (
+            <TextInput
+              style={{
+                height: 40,
+                backgroundColor: 'transparent',
+                fontSize: 15,
+                marginTop: 15,
+                borderBottomWidth: 1,
+                borderBottomColor: 'lightgray',
+              }}
+              placeholder="Введите количество дней"
+              onChangeText={text => this.setState({recDays: text})}
+              keyboardType="numeric"
+            />
+          ) : this.state.selectedRecurrence === 'key2' ? (
+            <TextInput
+              style={{
+                height: 40,
+                backgroundColor: 'transparent',
+                fontSize: 15,
+                marginTop: 15,
+                borderBottomWidth: 1,
+                borderBottomColor: 'lightgray',
+              }}
+              placeholder="Введите количество недель"
+              onChangeText={text => this.setState({recWeeks: text})}
+              keyboardType="numeric"
+            />
+          ) : this.state.selectedRecurrence === 'key3' ? (
+            <TextInput
+              style={{
+                height: 40,
+                backgroundColor: 'transparent',
+                fontSize: 15,
+                marginTop: 15,
+                borderBottomWidth: 1,
+                borderBottomColor: 'lightgray',
+              }}
+              placeholder="Введите количество месяцев"
+              onChangeText={text => this.setState({recMonths: text})}
+              keyboardType="numeric"
+            />
+          ) : null}
+        </View> */}
         <View style={{marginTop: 30, marginBottom: 50}}>
           <Button title="Сохранить" onPress={this.saveEvent} />
         </View>

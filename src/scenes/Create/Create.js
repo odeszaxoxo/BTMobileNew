@@ -7,6 +7,7 @@ import {
   AsyncStorage,
   ScrollView,
   Alert,
+  TextInput,
 } from 'react-native';
 import {Input} from 'react-native-elements';
 import moment from 'moment';
@@ -20,6 +21,7 @@ import CalendarPicker from 'react-native-calendar-picker';
 import NetInfo from '@react-native-community/netinfo';
 import MultiSelect from 'react-native-multiple-select';
 import DatePicker from 'react-native-date-picker';
+import {uniq} from 'lodash';
 
 export default class CreateScreen extends Component {
   constructor(props) {
@@ -40,6 +42,13 @@ export default class CreateScreen extends Component {
       dateStart: new Date(),
       dateEnd: new Date(),
       selectedRecurrence: 'key0',
+      selectedCustomDays: [],
+      selectedCustomDaysArr: [],
+      reqDate: new Date(),
+      recDays: 1,
+      recWeeks: 1,
+      recMonths: 1,
+      pickerDate: new Date(),
     };
   }
   static navigationOptions = {
@@ -50,6 +59,17 @@ export default class CreateScreen extends Component {
   componentDidMount() {
     this.getParams();
   }
+
+  onDateChange = async date => {
+    var offset = new Date().getTimezoneOffset() / 60;
+    var offsetCalc = new Date(date).getHours() - offset;
+    var newTime = new Date(new Date(date).setHours(offsetCalc));
+    var daysArr = this.state.selectedCustomDays;
+    daysArr.push(newTime);
+    this.setState({selectedCustomDays: daysArr});
+    const uniqDates = [...new Set(daysArr.map(date1 => date1.toString()))];
+    this.setState({selectedCustomDaysArr: uniqDates});
+  };
 
   getParams = async () => {
     try {
@@ -63,6 +83,8 @@ export default class CreateScreen extends Component {
       this.setState({usersArray: users});
       const external = JSON.parse(await AsyncStorage.getItem('external'));
       this.setState({externalArray: external});
+      const picker = await AsyncStorage.getItem('SelectedStartDate');
+      this.setState({dateStart: new Date(picker), dateEnd: new Date(picker)});
     } catch (error) {
       console.log(error.message);
     }
@@ -133,6 +155,10 @@ export default class CreateScreen extends Component {
   saveEvent = async () => {
     var recurrenceRule = '';
     var weekDays = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+    this.setState({reqDate: this.state.dateEnd});
+    var endDate = this.state.reqDate;
+    var reqDays = null;
+    var reqForm = null;
     if (this.state.selectedRecurrence === 'key0') {
       recurrenceRule = '';
     } else {
@@ -144,15 +170,19 @@ export default class CreateScreen extends Component {
         .join('')
         .split(':')
         .join('');
-      var endDate = new Date(this.state.dateEnd.setMilliseconds(0))
-        .toISOString()
-        .replace(/\.\d+/, '')
-        .split('-')
-        .join('')
-        .split(':')
-        .join('');
       var freq = '';
       if (this.state.selectedRecurrence === 'key1') {
+        let reqDate = this.state.reqDate;
+        reqDays =
+          new Date(reqDate).getDate() + parseInt(this.state.recDays, 10);
+        reqForm = new Date(reqDate.setDate(reqDays));
+        endDate = new Date(reqForm.setMilliseconds(0))
+          .toISOString()
+          .replace(/\.\d+/, '')
+          .split('-')
+          .join('')
+          .split(':')
+          .join('');
         freq = 'FREQ=DAILY';
         recurrenceRule =
           'DTSTART:' +
@@ -161,10 +191,22 @@ export default class CreateScreen extends Component {
           freq +
           ';UNTIL=' +
           endDate +
-          ';COUNT=7;INTERVAL=1;WKST=' +
+          ';INTERVAL=1;WKST=' +
           weekDay;
       } else {
         if (this.state.selectedRecurrence === 'key2') {
+          let reqDate = this.state.reqDate;
+          reqDays =
+            new Date(reqDate).getDate() + parseInt(this.state.recWeeks, 10) * 7;
+          reqForm = new Date(reqDate.setDate(reqDays));
+          endDate = new Date(reqForm.setMilliseconds(0))
+            .toISOString()
+            .replace(/\.\d+/, '')
+            .split('-')
+            .join('')
+            .split(':')
+            .join('');
+          console.log(endDate);
           freq = 'FREQ=WEEKLY';
           recurrenceRule =
             'DTSTART:' +
@@ -173,9 +215,21 @@ export default class CreateScreen extends Component {
             freq +
             ';UNTIL=' +
             endDate +
-            ';COUNT=4;INTERVAL=1;WKST=' +
+            ';INTERVAL=1;WKST=' +
             weekDay;
         } else {
+          let reqDate = this.state.reqDate;
+          reqDays =
+            new Date(reqDate).getMonth() + parseInt(this.state.recMonths, 10);
+          reqForm = new Date(reqDate.setMonth(reqDays));
+          endDate = new Date(reqForm.setMilliseconds(0))
+            .toISOString()
+            .replace(/\.\d+/, '')
+            .split('-')
+            .join('')
+            .split(':')
+            .join('');
+          console.log(endDate);
           freq = 'FREQ=MONTHLY';
           recurrenceRule =
             'DTSTART:' +
@@ -184,65 +238,86 @@ export default class CreateScreen extends Component {
             freq +
             ';UNTIL=' +
             endDate +
-            ';COUNT=12;INTERVAL=1;WKST=' +
+            ';INTERVAL=1;WKST=' +
             weekDay;
         }
       }
     }
-    if (this.state.eventTitle !== '') {
-      if (new Date(this.state.dateEnd) > new Date(this.state.dateStart)) {
-        var savedEvent = {
-          username: this.state.userToken.username,
-          password: this.state.userToken.password,
-          isLogin: this.state.userToken.isLogin,
-          title: this.state.eventTitle,
-          description: this.state.eventDesciption,
-          resourceId: this.state.scenes[this.state.selected].id,
-          collectiveId: this.state.collectives[this.state.selectedCollective]
-            .id,
-          isPlan: false,
-          isDisableNotifications: true,
-          conductorUser: 0,
-          requiredUsers: this.state.selectedUsers,
-          dutyUsers: this.state.selectedAlert,
-          alertedUsers: this.state.selectedAlert,
-          externalUsers: this.state.selectedExternal,
-          dateStart: this.state.dateStart.toISOString(),
-          dateEnd: this.state.dateEnd.toISOString(),
-          isRecurrence: this.state.selectedRecurrence === 'key0' ? false : true,
-          recurrenceRule: recurrenceRule,
-        };
-        if (this.state.prodCheck) {
-          var port = 'https://calendar.bolshoi.ru:8050';
-        } else {
-          port = 'https://calendartest.bolshoi.ru:8050';
-        }
-        console.log(savedEvent);
-        // fetch(port + '/WCF/BTService.svc/CreateEvent', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify(savedEvent),
-        // })
-        //   .then(response => {
-        //     console.log(response);
-        //     this.props.navigation.navigate('Agenda');
-        //   })
-        //   .catch(err => {
-        //     console.error(err);
-        //   });
-      } else {
-        Alert.alert(
-          'Некорректная дата',
-          'Дата начала события позже даты окончания',
-        );
+    if (this.state.selectedRecurrence === 'key4') {
+      var uniqDates = this.state.selectedCustomDaysArr;
+      console.log(uniqDates);
+      for (var i = 0; i < uniqDates.length; i++) {
+        var dateSel =
+          new Date(uniqDates[i]).getFullYear() +
+          '-' +
+          new Date(uniqDates[i]).getMonth() +
+          '-' +
+          new Date(uniqDates[i]).getDate() +
+          '-' +
+          this.state.dateStart.getHours() +
+          '-' +
+          this.state.dateStart.getMinutes() +
+          '-' +
+          this.state.dateStart.getSeconds();
+        console.log(dateSel);
       }
     } else {
-      Alert.alert(
-        'Заполните обязательные поля',
-        'Обязательные поля отмечены звездочкой.',
-      );
+      if (this.state.eventTitle !== '') {
+        if (new Date(this.state.dateEnd) > new Date(this.state.dateStart)) {
+          var savedEvent = {
+            username: this.state.userToken.username,
+            password: this.state.userToken.password,
+            isLogin: this.state.userToken.isLogin,
+            title: this.state.eventTitle,
+            description: this.state.eventDesciption,
+            resourceId: this.state.scenes[this.state.selected].id,
+            collectiveId: this.state.collectives[this.state.selectedCollective]
+              .id,
+            isPlan: false,
+            isDisableNotifications: true,
+            conductorUser: 0,
+            requiredUsers: this.state.selectedUsers,
+            dutyUsers: this.state.selectedAlert,
+            alertedUsers: this.state.selectedAlert,
+            externalUsers: this.state.selectedExternal,
+            dateStart: this.state.dateStart.toISOString(),
+            dateEnd: this.state.dateEnd.toISOString(),
+            isRecurrence:
+              this.state.selectedRecurrence === 'key0' ? false : true,
+            recurrenceRule: recurrenceRule,
+          };
+          if (this.state.prodCheck) {
+            var port = 'https://calendar.bolshoi.ru:8050';
+          } else {
+            port = 'https://calendartest.bolshoi.ru:8050';
+          }
+          console.log(savedEvent);
+          fetch(port + '/WCF/BTService.svc/CreateEvent', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(savedEvent),
+          })
+            .then(response => {
+              console.log(response);
+              this.props.navigation.navigate('Agenda');
+            })
+            .catch(err => {
+              console.error(err);
+            });
+        } else {
+          Alert.alert(
+            'Некорректная дата',
+            'Дата начала события позже даты окончания',
+          );
+        }
+      } else {
+        Alert.alert(
+          'Заполните обязательные поля',
+          'Обязательные поля отмечены звездочкой.',
+        );
+      }
     }
   };
 
@@ -581,8 +656,80 @@ export default class CreateScreen extends Component {
             <Picker.Item label="Ежедневно" value="key1" />
             <Picker.Item label="Еженедельно" value="key2" />
             <Picker.Item label="Ежемесячно" value="key3" />
+            {/* <Picker.Item label="Произвольно" value="key4" /> */}
           </Picker>
         </Item>
+        <View>
+          {this.state.selectedRecurrence === 'key1' ? (
+            <TextInput
+              style={{
+                height: 40,
+                backgroundColor: 'transparent',
+                fontSize: 15,
+                marginTop: 15,
+                borderBottomWidth: 1,
+                borderBottomColor: 'lightgray',
+              }}
+              placeholder="Введите количество дней"
+              onChangeText={text => this.setState({recDays: text})}
+              keyboardType="numeric"
+            />
+          ) : this.state.selectedRecurrence === 'key2' ? (
+            <TextInput
+              style={{
+                height: 40,
+                backgroundColor: 'transparent',
+                fontSize: 15,
+                marginTop: 15,
+                borderBottomWidth: 1,
+                borderBottomColor: 'lightgray',
+              }}
+              placeholder="Введите количество недель"
+              onChangeText={text => this.setState({recWeeks: text})}
+              keyboardType="numeric"
+            />
+          ) : this.state.selectedRecurrence === 'key3' ? (
+            <TextInput
+              style={{
+                height: 40,
+                backgroundColor: 'transparent',
+                fontSize: 15,
+                marginTop: 15,
+                borderBottomWidth: 1,
+                borderBottomColor: 'lightgray',
+              }}
+              placeholder="Введите количество месяцев"
+              onChangeText={text => this.setState({recMonths: text})}
+              keyboardType="numeric"
+            />
+          ) : null}
+        </View>
+        {/* <View style={{width: '100%', marginBottom: 30, marginTop: 20}}>
+          <CalendarPicker
+            startFromMonday={true}
+            todayBackgroundColor="#f2e6ff"
+            previousTitle="Пред"
+            nextTitle="След"
+            selectedDayColor="#1976D2"
+            selectedDayTextColor="#FFFFFF"
+            onDateChange={this.onDateChange}
+            weekdays={['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']}
+            months={[
+              'Январь',
+              'Ферваль',
+              'Март',
+              'Апрель',
+              'Май',
+              'Июнь',
+              'Июль',
+              'Август',
+              'Сентябрь',
+              'Октябрь',
+              'Ноябрь',
+              'Декабрь',
+            ]}
+          />
+        </View> */}
         <View style={{marginTop: 30, marginBottom: 50}}>
           <Button title="Сохранить" onPress={this.saveEvent} />
         </View>

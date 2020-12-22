@@ -258,7 +258,6 @@ export default class Store extends React.Component {
             console.log(e);
             return null;
           });
-          console.log(urlTest, rawResponse1);
           const stat1 = rawResponse1.status;
           if (stat1 === 200) {
             const content1 = await rawResponse1.json();
@@ -294,7 +293,7 @@ export default class Store extends React.Component {
                   date.substring(3).substring(0, 2) +
                   '-' +
                   date.substring(0, 2);
-                let dateEnd = content1.GetEventsByPeriodResult[
+                let dateEnd = content1.GetModifiedEventsByPeriodResult[
                   p
                 ].EndDateStr.substring(0, 10)
                   .split('.')
@@ -460,7 +459,6 @@ export default class Store extends React.Component {
       console.log(e);
       return null;
     });
-    console.log(urlTest, rawResponse1);
     const stat = rawResponse1.status;
     if (stat === 200) {
       const content1 = await rawResponse1.json();
