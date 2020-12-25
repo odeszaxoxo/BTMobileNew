@@ -19,6 +19,7 @@ Event.schema = {
     description: 'string',
     recurrence: 'bool',
     dateEnd: 'string',
+    isDisableNotifications: 'bool',
   },
   primaryKey: 'id',
 };

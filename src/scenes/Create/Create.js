@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   TextInput,
+  Switch,
 } from 'react-native';
 import {Input} from 'react-native-elements';
 import moment from 'moment';
@@ -49,6 +50,8 @@ export default class CreateScreen extends Component {
       recWeeks: 1,
       recMonths: 1,
       pickerDate: new Date(),
+      reqDateStart: new Date(),
+      isDisableNotifications: false,
     };
   }
   static navigationOptions = {
@@ -56,9 +59,9 @@ export default class CreateScreen extends Component {
     headerBackTitle: 'Назад',
   };
 
-  componentDidMount() {
+  componentDidMount = async () => {
     this.getParams();
-  }
+  };
 
   onDateChange = async date => {
     var offset = new Date().getTimezoneOffset() / 60;
@@ -83,8 +86,19 @@ export default class CreateScreen extends Component {
       this.setState({usersArray: users});
       const external = JSON.parse(await AsyncStorage.getItem('external'));
       this.setState({externalArray: external});
-      const picker = await AsyncStorage.getItem('SelectedStartDate');
-      this.setState({dateStart: new Date(picker), dateEnd: new Date(picker)});
+      var offset = new Date().getTimezoneOffset() / 60;
+      const picker = new Date(
+        JSON.parse(await AsyncStorage.getItem('StarterDate')),
+      );
+      picker.setHours(picker.getHours() + offset);
+      this.setState({
+        dateStart: new Date(picker),
+        dateEnd: new Date(picker),
+      });
+      this.setState({
+        reqDate: this.state.dateEnd,
+        reqDateStart: this.state.dateStart,
+      });
     } catch (error) {
       console.log(error.message);
     }
@@ -154,16 +168,26 @@ export default class CreateScreen extends Component {
 
   saveEvent = async () => {
     var recurrenceRule = '';
-    var weekDays = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
-    this.setState({reqDate: this.state.dateEnd});
+    var weekDays = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+    var weekDay = weekDays[this.state.reqDateStart.getDay()];
+    var start = new Date(this.state.dateStart);
+    var end = new Date(this.state.dateEnd);
+    this.setState({
+      reqDate: this.state.dateEnd,
+      reqDateStart: this.state.dateStart,
+    });
     var endDate = this.state.reqDate;
     var reqDays = null;
     var reqForm = null;
     if (this.state.selectedRecurrence === 'key0') {
       recurrenceRule = '';
     } else {
-      var weekDay = weekDays[this.state.dateStart.getDay() - 1];
-      var startDate = new Date(this.state.dateStart.setMilliseconds(0))
+      var offset = new Date().getTimezoneOffset() / 60;
+      var startDateCopy = this.state.reqDateStart;
+      var startDateForm1 = new Date(
+        startDateCopy.setHours(startDateCopy.getHours() - offset),
+      );
+      var startDate = new Date(startDateForm1.setMilliseconds(0))
         .toISOString()
         .replace(/\.\d+/, '')
         .split('-')
@@ -172,9 +196,11 @@ export default class CreateScreen extends Component {
         .join('');
       var freq = '';
       if (this.state.selectedRecurrence === 'key1') {
-        let reqDate = this.state.reqDate;
+        let reqDate = new Date(
+          this.state.reqDate.setHours(this.state.reqDate.getHours() - offset),
+        );
         reqDays =
-          new Date(reqDate).getDate() + parseInt(this.state.recDays, 10);
+          new Date(reqDate).getDate() + parseInt(this.state.recDays, 10) - 1;
         reqForm = new Date(reqDate.setDate(reqDays));
         endDate = new Date(reqForm.setMilliseconds(0))
           .toISOString()
@@ -186,16 +212,19 @@ export default class CreateScreen extends Component {
         freq = 'FREQ=DAILY';
         recurrenceRule =
           'DTSTART:' +
-          startDate +
+          startDate.substr(0, 9) +
+          '000000Z' +
           'RRULE:' +
           freq +
           ';UNTIL=' +
-          endDate +
-          ';INTERVAL=1;WKST=' +
-          weekDay;
+          endDate.substr(0, 9) +
+          '000000Z' +
+          ';INTERVAL=1;WKST=MO';
       } else {
         if (this.state.selectedRecurrence === 'key2') {
-          let reqDate = this.state.reqDate;
+          let reqDate = new Date(
+            this.state.reqDate.setHours(this.state.reqDate.getHours() - offset),
+          );
           reqDays =
             new Date(reqDate).getDate() + parseInt(this.state.recWeeks, 10) * 7;
           reqForm = new Date(reqDate.setDate(reqDays));
@@ -206,19 +235,22 @@ export default class CreateScreen extends Component {
             .join('')
             .split(':')
             .join('');
-          console.log(endDate);
           freq = 'FREQ=WEEKLY';
           recurrenceRule =
             'DTSTART:' +
-            startDate +
-            'RRULE:' +
+            startDate.substr(0, 9) +
+            '000000ZRRULE:' +
             freq +
             ';UNTIL=' +
-            endDate +
-            ';INTERVAL=1;WKST=' +
+            endDate.substr(0, 9) +
+            '000000Z' +
+            ';INTERVAL=1;WKST=MO;' +
+            'BYDAY=' +
             weekDay;
         } else {
-          let reqDate = this.state.reqDate;
+          let reqDate = new Date(
+            this.state.reqDate.setHours(this.state.reqDate.getHours() - offset),
+          );
           reqDays =
             new Date(reqDate).getMonth() + parseInt(this.state.recMonths, 10);
           reqForm = new Date(reqDate.setMonth(reqDays));
@@ -229,23 +261,23 @@ export default class CreateScreen extends Component {
             .join('')
             .split(':')
             .join('');
-          console.log(endDate);
           freq = 'FREQ=MONTHLY';
           recurrenceRule =
             'DTSTART:' +
-            startDate +
-            'RRULE:' +
+            startDate.substr(0, 9) +
+            '000000ZRRULE:' +
             freq +
             ';UNTIL=' +
-            endDate +
-            ';INTERVAL=1;WKST=' +
+            endDate.substr(0, 9) +
+            '000000Z' +
+            ';INTERVAL=1;WKST=MO;' +
+            'BYDAY=' +
             weekDay;
         }
       }
     }
     if (this.state.selectedRecurrence === 'key4') {
       var uniqDates = this.state.selectedCustomDaysArr;
-      console.log(uniqDates);
       for (var i = 0; i < uniqDates.length; i++) {
         var dateSel =
           new Date(uniqDates[i]).getFullYear() +
@@ -264,6 +296,7 @@ export default class CreateScreen extends Component {
     } else {
       if (this.state.eventTitle !== '') {
         if (new Date(this.state.dateEnd) > new Date(this.state.dateStart)) {
+          var offset = new Date().getTimezoneOffset() / 60;
           var savedEvent = {
             username: this.state.userToken.username,
             password: this.state.userToken.password,
@@ -274,14 +307,14 @@ export default class CreateScreen extends Component {
             collectiveId: this.state.collectives[this.state.selectedCollective]
               .id,
             isPlan: false,
-            isDisableNotifications: true,
             conductorUser: 0,
             requiredUsers: this.state.selectedUsers,
             dutyUsers: this.state.selectedAlert,
             alertedUsers: this.state.selectedAlert,
             externalUsers: this.state.selectedExternal,
-            dateStart: this.state.dateStart.toISOString(),
-            dateEnd: this.state.dateEnd.toISOString(),
+            dateStart: start.toISOString(),
+            dateEnd: end.toISOString(),
+            isDisableNotifications: !this.state.isDisableNotifications,
             isRecurrence:
               this.state.selectedRecurrence === 'key0' ? false : true,
             recurrenceRule: recurrenceRule,
@@ -334,10 +367,14 @@ export default class CreateScreen extends Component {
   };
 
   onDateStartChange = date => {
-    this.setState({dateStart: date});
+    this.setState({dateStart: date, reqDateStart: date});
   };
   onDateEndChange = date => {
-    this.setState({dateEnd: date});
+    this.setState({dateEnd: date, reqDate: date});
+  };
+
+  toggleSwitch = value => {
+    this.setState({isDisableNotifications: value});
   };
 
   render() {
@@ -386,6 +423,30 @@ export default class CreateScreen extends Component {
           value={this.state.eventDesciption}
           inputStyle={{color: 'black', fontSize: 20}}
         />
+        <View style={{position: 'relative'}}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: 'bold',
+              marginTop: 35,
+              marginLeft: 10,
+              color: '#90a4ae',
+              display: 'flex',
+              alignContent: 'center',
+            }}>
+            Уведомления:
+          </Text>
+          <Switch
+            trackColor={{false: '#767577', true: '#cfd8dc'}}
+            thumbColor={
+              this.state.isDisableNotifications ? '#388e3c' : '#f4f3f4'
+            }
+            ios_backgroundColor="#3e3e3e"
+            onValueChange={this.toggleSwitch}
+            value={this.state.isDisableNotifications}
+            style={{position: 'absolute', left: '80%', top: 35}}
+          />
+        </View>
         <View style={{marginTop: 10, padding: 10}}>
           <Text
             style={{

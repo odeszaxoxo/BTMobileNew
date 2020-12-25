@@ -320,6 +320,16 @@ export default class Store extends React.Component {
                   content1.GetModifiedEventsByPeriodResult[p].Description;
                 var recurrence =
                   content1.GetModifiedEventsByPeriodResult[p].isRecurrence;
+                if (
+                  content1.GetModifiedEventsByPeriodResult[p]
+                    .IsDisableNotifications !== undefined
+                ) {
+                  var isDisableNotifications =
+                    content1.GetModifiedEventsByPeriodResult[p]
+                      .IsDisableNotifications;
+                } else {
+                  var isDisableNotifications = false;
+                }
                 let findVar =
                   sceneId.charAt(0).toUpperCase() + sceneId.slice(1);
                 if (
@@ -360,6 +370,7 @@ export default class Store extends React.Component {
                           description: description,
                           recurrence: recurrence,
                           dateEnd: dateEndFormatted,
+                          isDisableNotifications: isDisableNotifications,
                         },
                         'modified',
                       );
@@ -389,6 +400,7 @@ export default class Store extends React.Component {
                           description: description,
                           recurrence: recurrence,
                           dateEnd: dateEndFormatted,
+                          isDisableNotifications: isDisableNotifications,
                         },
                         'modified',
                       );
@@ -513,6 +525,11 @@ export default class Store extends React.Component {
       var endDateFormatted = moment(endDate).format('YYYY-MM-DDTHH:mm:ss');
       this.setState({startDate: startDate, endDate: startDate});
     }
+    await AsyncStorage.removeItem('StarterDate');
+    await AsyncStorage.setItem(
+      'StarterDate',
+      JSON.stringify(this.state.startDate),
+    );
     if (JSON.parse(testArr) === null) {
       var arr2 = [];
       for (let i = 1; i <= realm.objects('Scene').length; i++) {

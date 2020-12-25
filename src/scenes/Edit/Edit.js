@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   TextInput,
+  Switch,
 } from 'react-native';
 import {Input} from 'react-native-elements';
 import moment from 'moment';
@@ -45,6 +46,8 @@ export default class EditScreen extends Component {
       recDays: 1,
       recWeeks: 1,
       recMonths: 1,
+      isDisableNotifications: true,
+      reqDateStart: new Date(),
     };
   }
   static navigationOptions = {
@@ -73,7 +76,6 @@ export default class EditScreen extends Component {
     }
     const {navigation} = this.props;
     const item1 = navigation.getParam('item', 'empty');
-    console.log(item1);
     this.setState({
       eventTitle: item1.title,
       eventDesciption: item1.description,
@@ -191,10 +193,16 @@ export default class EditScreen extends Component {
 
   saveEvent = async () => {
     var recurrenceRule = '';
-    var weekDays = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+    var weekDays = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+    var weekDay = weekDays[this.state.reqDateStart.getDay()];
     const {navigation} = this.props;
     const item1 = navigation.getParam('item', 'empty');
-    this.setState({reqDate: this.state.dateEnd});
+    var start = new Date(this.state.dateStart);
+    var end = new Date(this.state.dateEnd);
+    this.setState({
+      reqDate: this.state.dateEnd,
+      reqDateStart: this.state.dateStart,
+    });
     var endDate = this.state.reqDate;
     var reqDays = null;
     var reqForm = null;
@@ -206,8 +214,12 @@ export default class EditScreen extends Component {
     if (rec === 'key0') {
       recurrenceRule = '';
     } else {
-      var weekDay = weekDays[this.state.dateStart.getDay() - 1];
-      var startDate = new Date(this.state.dateStart.setMilliseconds(0))
+      var offset = new Date().getTimezoneOffset() / 60;
+      var startDateCopy = this.state.reqDateStart;
+      var startDateForm1 = new Date(
+        startDateCopy.setHours(startDateCopy.getHours() - offset),
+      );
+      var startDate = new Date(startDateForm1.setMilliseconds(0))
         .toISOString()
         .replace(/\.\d+/, '')
         .split('-')
@@ -216,9 +228,11 @@ export default class EditScreen extends Component {
         .join('');
       var freq = '';
       if (this.state.selectedRecurrence === 'key1') {
-        let reqDate = this.state.reqDate;
+        let reqDate = new Date(
+          this.state.reqDate.setHours(this.state.reqDate.getHours() - offset),
+        );
         reqDays =
-          new Date(reqDate).getDate() + parseInt(this.state.recDays, 10);
+          new Date(reqDate).getDate() + parseInt(this.state.recDays, 10) - 1;
         reqForm = new Date(reqDate.setDate(reqDays));
         endDate = new Date(reqForm.setMilliseconds(0))
           .toISOString()
@@ -230,16 +244,19 @@ export default class EditScreen extends Component {
         freq = 'FREQ=DAILY';
         recurrenceRule =
           'DTSTART:' +
-          startDate +
+          startDate.substr(0, 9) +
+          '000000Z' +
           'RRULE:' +
           freq +
           ';UNTIL=' +
-          endDate +
-          ';INTERVAL=1;WKST=' +
-          weekDay;
+          endDate.substr(0, 9) +
+          '000000Z' +
+          ';INTERVAL=1;WKST=MO';
       } else {
         if (this.state.selectedRecurrence === 'key2') {
-          let reqDate = this.state.reqDate;
+          let reqDate = new Date(
+            this.state.reqDate.setHours(this.state.reqDate.getHours() - offset),
+          );
           reqDays =
             new Date(reqDate).getDate() + parseInt(this.state.recWeeks, 10) * 7;
           reqForm = new Date(reqDate.setDate(reqDays));
@@ -250,19 +267,22 @@ export default class EditScreen extends Component {
             .join('')
             .split(':')
             .join('');
-          console.log(endDate);
           freq = 'FREQ=WEEKLY';
           recurrenceRule =
             'DTSTART:' +
-            startDate +
-            'RRULE:' +
+            startDate.substr(0, 9) +
+            '000000ZRRULE:' +
             freq +
             ';UNTIL=' +
-            endDate +
-            ';INTERVAL=1;WKST=' +
+            endDate.substr(0, 9) +
+            '000000Z' +
+            ';INTERVAL=1;WKST=MO;' +
+            'BYDAY=' +
             weekDay;
         } else {
-          let reqDate = this.state.reqDate;
+          let reqDate = new Date(
+            this.state.reqDate.setHours(this.state.reqDate.getHours() - offset),
+          );
           reqDays =
             new Date(reqDate).getMonth() + parseInt(this.state.recMonths, 10);
           reqForm = new Date(reqDate.setMonth(reqDays));
@@ -273,16 +293,17 @@ export default class EditScreen extends Component {
             .join('')
             .split(':')
             .join('');
-          console.log(endDate);
           freq = 'FREQ=MONTHLY';
           recurrenceRule =
             'DTSTART:' +
-            startDate +
-            'RRULE:' +
+            startDate.substr(0, 9) +
+            '000000ZRRULE:' +
             freq +
             ';UNTIL=' +
-            endDate +
-            ';INTERVAL=1;WKST=' +
+            endDate.substr(0, 9) +
+            '000000Z' +
+            ';INTERVAL=1;WKST=MO;' +
+            'BYDAY=' +
             weekDay;
         }
       }
@@ -301,7 +322,6 @@ export default class EditScreen extends Component {
           collectiveId: this.state.collectives[this.state.selectedCollective]
             .id,
           isPlan: false,
-          isDisableNotifications: true,
           conductorUser: 0,
           requiredUsers: this.state.selectedUsers,
           dutyUsers: this.state.selectedAlert,
@@ -312,6 +332,7 @@ export default class EditScreen extends Component {
           isRecurrence: rec === 'key0' ? false : true,
           recurrenceRule: recurrenceRule,
           eventId: this.state.eventID,
+          isDisableNotifications: !this.state.isDisableNotifications,
         };
         console.log(savedEvent);
         if (this.state.prodCheck) {
@@ -319,20 +340,20 @@ export default class EditScreen extends Component {
         } else {
           port = 'https://calendartest.bolshoi.ru:8050';
         }
-        // fetch(port + '/WCF/BTService.svc/EditEvent', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify(savedEvent),
-        // })
-        //   .then(response => {
-        //     console.log(response);
-        //     this.props.navigation.navigate('Agenda');
-        //   })
-        //   .catch(err => {
-        //     console.error(err);
-        //   });
+        fetch(port + '/WCF/BTService.svc/EditEvent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(savedEvent),
+        })
+          .then(response => {
+            console.log(response);
+            this.props.navigation.navigate('Agenda');
+          })
+          .catch(err => {
+            console.error(err);
+          });
       } else {
         Alert.alert(
           'Некорректная дата',
@@ -364,6 +385,10 @@ export default class EditScreen extends Component {
   };
   onDateEndChange = date => {
     this.setState({dateEnd: date});
+  };
+
+  toggleSwitch = value => {
+    this.setState({isDisableNotifications: value});
   };
 
   render() {
@@ -421,6 +446,30 @@ export default class EditScreen extends Component {
           value={this.state.eventDesciption}
           inputStyle={{color: 'black', fontSize: 20}}
         />
+        <View style={{position: 'relative'}}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: 'bold',
+              marginTop: 35,
+              marginLeft: 10,
+              color: '#90a4ae',
+              display: 'flex',
+              alignContent: 'center',
+            }}>
+            Уведомления:
+          </Text>
+          <Switch
+            trackColor={{false: '#767577', true: '#cfd8dc'}}
+            thumbColor={
+              this.state.isDisableNotifications ? '#388e3c' : '#f4f3f4'
+            }
+            ios_backgroundColor="#3e3e3e"
+            onValueChange={this.toggleSwitch}
+            value={this.state.isDisableNotifications}
+            style={{position: 'absolute', left: '80%', top: 35}}
+          />
+        </View>
         <View style={{marginTop: 10, padding: 10}}>
           <Text
             style={{

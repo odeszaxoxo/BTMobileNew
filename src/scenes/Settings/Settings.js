@@ -478,6 +478,15 @@ export default class SettingsScreen extends React.Component {
                   content1.GetEventsByPeriodResult[p].Description;
                 var recurrence =
                   content1.GetEventsByPeriodResult[p].isRecurrence;
+                if (
+                  content1.GetEventsByPeriodResult[p].IsDisableNotifications !==
+                  undefined
+                ) {
+                  var isDisableNotifications =
+                    content1.GetEventsByPeriodResult[p].IsDisableNotifications;
+                } else {
+                  var isDisableNotifications = false;
+                }
                 realm.write(() => {
                   realm.create(
                     'EventItem',
@@ -497,6 +506,7 @@ export default class SettingsScreen extends React.Component {
                       description: description,
                       recurrence: recurrence,
                       dateEnd: dateEndFormatted,
+                      isDisableNotifications: isDisableNotifications,
                     },
                     'modified',
                   );

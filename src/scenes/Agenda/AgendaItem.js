@@ -464,6 +464,23 @@ export class AgendaItem extends React.PureComponent {
                     }}>
                     {this.state.selectedRequired}
                   </Text>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 'bold',
+                      color: '#FF9800',
+                    }}>
+                    Черновик:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      marginBottom: 15,
+                      color: '#424242',
+                      fontWeight: 'bold',
+                    }}>
+                    {this.props.item.isDisableNotifications ? 'Да' : 'Нет'}
+                  </Text>
                 </ScrollView>
               </View>
               <View
