@@ -457,7 +457,7 @@ export default class EditScreen extends Component {
               display: 'flex',
               alignContent: 'center',
             }}>
-            Уведомления:
+            Черновик(без уведомлений):
           </Text>
           <Switch
             trackColor={{false: '#767577', true: '#cfd8dc'}}

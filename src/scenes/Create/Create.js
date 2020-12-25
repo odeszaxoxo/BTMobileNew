@@ -51,7 +51,7 @@ export default class CreateScreen extends Component {
       recMonths: 1,
       pickerDate: new Date(),
       reqDateStart: new Date(),
-      isDisableNotifications: false,
+      isDisableNotifications: true,
     };
   }
   static navigationOptions = {
@@ -434,7 +434,7 @@ export default class CreateScreen extends Component {
               display: 'flex',
               alignContent: 'center',
             }}>
-            Уведомления:
+            Черновик(без уведомлений):
           </Text>
           <Switch
             trackColor={{false: '#767577', true: '#cfd8dc'}}
