@@ -226,7 +226,7 @@ export default class CreateScreen extends Component {
             this.state.reqDate.setHours(this.state.reqDate.getHours() - offset),
           );
           reqDays =
-            new Date(reqDate).getDate() + parseInt(this.state.recWeeks, 10) * 7;
+            new Date(reqDate).getDate() + parseInt(this.state.recWeeks, 10) * 7 - 1;
           reqForm = new Date(reqDate.setDate(reqDays));
           endDate = new Date(reqForm.setMilliseconds(0))
             .toISOString()
@@ -314,7 +314,7 @@ export default class CreateScreen extends Component {
             externalUsers: this.state.selectedExternal,
             dateStart: start.toISOString(),
             dateEnd: end.toISOString(),
-            isDisableNotifications: !this.state.isDisableNotifications,
+            isDisableNotifications: this.state.isDisableNotifications,
             isRecurrence:
               this.state.selectedRecurrence === 'key0' ? false : true,
             recurrenceRule: recurrenceRule,

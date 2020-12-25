@@ -332,7 +332,7 @@ export default class EditScreen extends Component {
           isRecurrence: rec === 'key0' ? false : true,
           recurrenceRule: recurrenceRule,
           eventId: this.state.eventID,
-          isDisableNotifications: !this.state.isDisableNotifications,
+          isDisableNotifications: this.state.isDisableNotifications,
         };
         console.log(savedEvent);
         if (this.state.prodCheck) {
