@@ -336,11 +336,11 @@ export default class Store extends React.Component {
                   realm.objects('Scene').filtered('resourceId = $0', findVar)[0]
                     .id === undefined
                 ) {
-                  Alert.alert(
-                    'Внимание',
-                    'Добавлена новая сцена. Пожалуйста, обновите данные через настройки!',
-                    {cancelable: true},
-                  );
+                  // Alert.alert(
+                  //   'Внимание',
+                  //   'Добавлена новая сцена. Пожалуйста, обновите данные через настройки!',
+                  //   {cancelable: true},
+                  // );
                 } else {
                   var refreshedScene = realm
                     .objects('Scene')
@@ -673,12 +673,10 @@ export default class Store extends React.Component {
   };
 
   onRegister(token) {
-    Alert.alert('Registered !', JSON.stringify(token));
     this.setState({registerToken: token.token, gcmRegistered: true});
   }
 
   onNotif(notif) {
-    Alert.alert(notif.title, notif.message);
   }
 
   renderItem = ({item}) => {

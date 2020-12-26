@@ -471,7 +471,6 @@ export default class CreateScreen extends Component {
             selectText="  Выбрать пользователей"
             searchInputPlaceholderText="Поиск..."
             onChangeInput={text => console.log(text)}
-            altFontFamily="ProximaNova-Light"
             tagRemoveIconColor="#CCC"
             tagBorderColor="#CCC"
             tagTextColor="#CCC"
@@ -512,7 +511,6 @@ export default class CreateScreen extends Component {
             selectText="  Выбрать пользователей"
             searchInputPlaceholderText="Поиск..."
             onChangeInput={text => console.log(text)}
-            altFontFamily="ProximaNova-Light"
             tagRemoveIconColor="#CCC"
             tagBorderColor="#CCC"
             tagTextColor="#CCC"
@@ -553,7 +551,6 @@ export default class CreateScreen extends Component {
             selectText="  Выбрать пользователей"
             searchInputPlaceholderText="Поиск..."
             onChangeInput={text => console.log(text)}
-            altFontFamily="ProximaNova-Light"
             tagRemoveIconColor="#CCC"
             tagBorderColor="#CCC"
             tagTextColor="#CCC"

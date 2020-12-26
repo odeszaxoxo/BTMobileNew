@@ -73,8 +73,13 @@ export class AgendaItem extends React.PureComponent {
   };
 
   goToEditScreen = () => {
-    this.props.navigation.navigate('Edit', {item: this.props.item});
-    this.setModalVisible(!this.state.modalVisible);
+    this.setState({
+      modalVisible: false,
+    }, () => {
+      let timer = setTimeout(() => {
+        this.props.navigation.navigate('Edit', {item: this.props.item})
+      }, 300);
+    })
   };
 
   render() {
@@ -243,6 +248,7 @@ export class AgendaItem extends React.PureComponent {
         <Modal
           animationType="fade"
           transparent={true}
+          navigation={this.props.navigation}
           visible={this.state.modalVisible}>
           <View
             style={{

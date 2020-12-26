@@ -494,7 +494,6 @@ export default class EditScreen extends Component {
             selectText="  Выбрать пользователей"
             searchInputPlaceholderText="Поиск..."
             onChangeInput={text => console.log(text)}
-            altFontFamily="ProximaNova-Light"
             tagRemoveIconColor="#CCC"
             tagBorderColor="#CCC"
             tagTextColor="#CCC"
@@ -535,7 +534,6 @@ export default class EditScreen extends Component {
             selectText="  Выбрать пользователей"
             searchInputPlaceholderText="Поиск..."
             onChangeInput={text => console.log(text)}
-            altFontFamily="ProximaNova-Light"
             tagRemoveIconColor="#CCC"
             tagBorderColor="#CCC"
             tagTextColor="#CCC"
@@ -576,7 +574,6 @@ export default class EditScreen extends Component {
             selectText="  Выбрать пользователей"
             searchInputPlaceholderText="Поиск..."
             onChangeInput={text => console.log(text)}
-            altFontFamily="ProximaNova-Light"
             tagRemoveIconColor="#CCC"
             tagBorderColor="#CCC"
             tagTextColor="#CCC"
@@ -698,7 +695,7 @@ export default class EditScreen extends Component {
           onDateChange={this.onDateStartChange}
           is24hourSource="locale"
           locale="ru"
-          timeZoneOffsetInMinutes="0"
+          timeZoneOffsetInMinutes={0}
         />
         <Text
           style={{
@@ -715,7 +712,7 @@ export default class EditScreen extends Component {
           onDateChange={this.onDateEndChange}
           is24hourSource="locale"
           locale="ru"
-          timeZoneOffsetInMinutes="0"
+          timeZoneOffsetInMinutes={0}
         />
         {this.state.selectedRecurrence !== 'key0' ? (
           <Text
