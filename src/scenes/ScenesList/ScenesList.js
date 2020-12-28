@@ -134,8 +134,7 @@ class ScenesList extends Component {
       }
     }
     return (
-      <View
-        style={{flexDirection: 'row', alignItems: 'center', height: '100%'}}>
+      <View style={{flexDirection: 'row', alignItems: 'center', height: 40}}>
         <View
           style={{
             marginLeft: 10,
@@ -143,10 +142,11 @@ class ScenesList extends Component {
             justifyContent: 'flex-start',
             width: '95%',
             alignItems: 'center',
+            height: 40,
           }}>
           <View
             style={{
-              height: 45,
+              height: 40,
               width: 10,
               backgroundColor: this.shadeColor(col.color, -15),
             }}
@@ -156,7 +156,8 @@ class ScenesList extends Component {
             <Icon
               name="create"
               color="gray"
-              style={{marginLeft: 40, size: 20}}
+              size={20}
+              style={{marginLeft: 40}}
             />
           ) : null}
         </View>

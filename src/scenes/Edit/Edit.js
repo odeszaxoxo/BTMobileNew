@@ -258,7 +258,9 @@ export default class EditScreen extends Component {
             this.state.reqDate.setHours(this.state.reqDate.getHours() - offset),
           );
           reqDays =
-            new Date(reqDate).getDate() + parseInt(this.state.recWeeks, 10) * 7;
+            new Date(reqDate).getDate() +
+            parseInt(this.state.recWeeks, 10) * 7 -
+            1;
           reqForm = new Date(reqDate.setDate(reqDays));
           endDate = new Date(reqForm.setMilliseconds(0))
             .toISOString()
@@ -284,7 +286,8 @@ export default class EditScreen extends Component {
             this.state.reqDate.setHours(this.state.reqDate.getHours() - offset),
           );
           reqDays =
-            new Date(reqDate).getMonth() + parseInt(this.state.recMonths, 10);
+            new Date(reqDate).getMonth() +
+            parseInt(this.state.recMonths, 10 - 1);
           reqForm = new Date(reqDate.setMonth(reqDays));
           endDate = new Date(reqForm.setMilliseconds(0))
             .toISOString()
@@ -695,7 +698,7 @@ export default class EditScreen extends Component {
           onDateChange={this.onDateStartChange}
           is24hourSource="locale"
           locale="ru"
-          timeZoneOffsetInMinutes={0}
+          timeZoneOffsetInMinutes="0"
         />
         <Text
           style={{
@@ -712,18 +715,20 @@ export default class EditScreen extends Component {
           onDateChange={this.onDateEndChange}
           is24hourSource="locale"
           locale="ru"
-          timeZoneOffsetInMinutes={0}
+          timeZoneOffsetInMinutes="0"
         />
-        {this.state.selectedRecurrence !== 'key0' ? (
-          <Text
-            style={{
-              fontSize: 15,
-              marginTop: 15,
-              marginLeft: 10,
-              color: '#90a4ae',
-            }}>
-            Повторяющееся
-          </Text>
+        {item1.recurrence ? (
+          this.state.selectedRecurrence !== 'key0' ? (
+            <Text
+              style={{
+                fontSize: 15,
+                marginTop: 15,
+                marginLeft: 10,
+                color: '#90a4ae',
+              }}>
+              Повторяющееся
+            </Text>
+          ) : null
         ) : null}
         {/* <Text
           style={{

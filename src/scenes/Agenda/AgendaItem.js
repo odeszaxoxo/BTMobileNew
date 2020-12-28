@@ -73,13 +73,16 @@ export class AgendaItem extends React.PureComponent {
   };
 
   goToEditScreen = () => {
-    this.setState({
-      modalVisible: false,
-    }, () => {
-      let timer = setTimeout(() => {
-        this.props.navigation.navigate('Edit', {item: this.props.item})
-      }, 300);
-    })
+    this.setState(
+      {
+        modalVisible: false,
+      },
+      () => {
+        let timer = setTimeout(() => {
+          this.props.navigation.navigate('Edit', {item: this.props.item});
+        }, 300);
+      },
+    );
   };
 
   render() {
@@ -247,8 +250,8 @@ export class AgendaItem extends React.PureComponent {
         </View>
         <Modal
           animationType="fade"
-          transparent={true}
           navigation={this.props.navigation}
+          transparent={true}
           visible={this.state.modalVisible}>
           <View
             style={{
@@ -388,6 +391,24 @@ export class AgendaItem extends React.PureComponent {
                     style={{
                       fontSize: 15,
                       marginTop: 25,
+                      fontWeight: 'bold',
+                      color: '#FF9800',
+                    }}>
+                    Описание:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: '#424242',
+                      fontWeight: 'normal',
+                      textAlign: 'left',
+                    }}>
+                    {this.props.item.description}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      marginTop: 15,
                       fontWeight: 'bold',
                       color: '#FF9800',
                     }}>

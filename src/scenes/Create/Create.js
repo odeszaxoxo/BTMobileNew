@@ -226,7 +226,9 @@ export default class CreateScreen extends Component {
             this.state.reqDate.setHours(this.state.reqDate.getHours() - offset),
           );
           reqDays =
-            new Date(reqDate).getDate() + parseInt(this.state.recWeeks, 10) * 7 - 1;
+            new Date(reqDate).getDate() +
+            parseInt(this.state.recWeeks, 10) * 7 -
+            1;
           reqForm = new Date(reqDate.setDate(reqDays));
           endDate = new Date(reqForm.setMilliseconds(0))
             .toISOString()
